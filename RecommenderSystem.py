@@ -71,7 +71,7 @@ st.sidebar.title("Input Book Details")
 
 # Sidebar inputs
 genre = st.sidebar.text_input("Enter Genre:", "Childrens")
-price = st.sidebar.number_input("Enter Price:", min_value=0.0, max_value=float('inf'), value=7.0)
+price = st.sidebar.number_input("Enter Price:", min_value=0.0, max_value=100.0)
 rating = st.sidebar.slider("Select Rating:", min_value=0.0, max_value=5.0, value=4.5, step=0.1)
 
 if st.sidebar.button("Get Recommendations"):
