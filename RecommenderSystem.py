@@ -1,5 +1,4 @@
 #Book Recommender System Using Clustering | Collaborative Based
-!pip install fuzzywuzzy
 import pandas as pd
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -7,7 +6,7 @@ from sklearn.neighbors import NearestNeighbors
 from fuzzywuzzy import process
 
 # load the dataset
-books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
+books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
 
 # print unique values in the genre column
 print("Unique genres:", books['genre'].unique())
