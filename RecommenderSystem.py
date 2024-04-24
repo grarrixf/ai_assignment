@@ -6,7 +6,7 @@ from sklearn.neighbors import NearestNeighbors
 from fuzzywuzzy import process
 
 # Load the dataset
-books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
+books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
 books.dropna(subset=['genre'], inplace=True)
 
 # Keep only relevant columns and rename them
