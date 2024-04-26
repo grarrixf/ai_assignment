@@ -66,10 +66,11 @@ if st.button('Get Recommendations'):
                 selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
                 # Filter books from the same cluster as selected books
                 recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
-                genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
-                # Limit the number of recommended books for this genre
-                genre_recommended_books = genre_recommended_books.head(num_recommended_books)
-                recommended_books = recommended_books.append(genre_recommended_books)
+                if recommended_books_indices:
+                    genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
+                    # Limit the number of recommended books for this genre
+                    genre_recommended_books = genre_recommended_books.head(num_recommended_books)
+                    recommended_books = recommended_books.append(genre_recommended_books)
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
             add_button = st.button(f"Add to Cart: {row['title']}")
