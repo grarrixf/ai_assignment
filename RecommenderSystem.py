@@ -71,6 +71,8 @@ if st.button('Get Recommendations'):
                     # Shuffle indices to get random recommendations
                     random_indices = recommended_books_indices.copy()
                     random.shuffle(random_indices)
+                    # Ensure random_indices does not exceed the length of the DataFrame
+                    random_indices = random_indices[:min(len(random_indices), num_recommended_books)]
                     genre_recommended_books = genre_books.iloc[random_indices].drop_duplicates(subset='title')
                     # Limit the number of recommended books for this genre
                     genre_recommended_books = genre_recommended_books.head(num_recommended_books)
