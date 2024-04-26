@@ -1,6 +1,6 @@
-from sklearn.cluster import KMeans
-import pandas as pd
 import streamlit as st
+import pandas as pd
+from sklearn.cluster import KMeans
 
 # Load the dataset
 books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
@@ -16,21 +16,6 @@ books.rename(columns={'rank': 'no', 'bookTitle': 'title', 'bookPrice': 'price', 
 books['price'] = pd.to_numeric(books['price'], errors='coerce')
 books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
 
-# Initialize cart if it doesn't exist
-if 'cart' not in st.session_state:
-    st.session_state.cart = []
-
-# Perform KMeans clustering
-def perform_clustering(data):
-    # Get the number of unique genres
-    n_genres = len(data['genre'].unique())
-    # Adjust the number of clusters based on the number of unique genres
-    n_clusters = min(10, n_genres)
-    # Perform KMeans clustering
-    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-    kmeans.fit(data[['price', 'rate']])
-    return kmeans
-
 # Sidebar to select books
 st.sidebar.header('Add Books to Cart')
 st.sidebar.subheader('Available Books')
@@ -43,18 +28,22 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 
 # Display cart contents
 st.sidebar.subheader('Cart')
-for idx, item in enumerate(st.session_state.cart):
-    if st.sidebar.button(f"Remove: {item}", key=f"remove_{idx}"):
-        st.session_state.cart.remove(item)
-    else:
-        st.sidebar.write(item)
+cart = st.session_state.cart if 'cart' in st.session_state else []
+items_to_remove = []
+for idx, item in enumerate(cart):
+    if st.sidebar.button(f"Remove: {item}"):
+        items_to_remove.append(idx)
+
+# Remove items from cart
+for idx in items_to_remove:
+    cart.pop(idx)
 
 # Recommendation layout
 st.write("# Book Recommendations")
 
 # Get recommendations based on selected books
 if st.button('Get Recommendations'):
-    selected_books_df = books[books['title'].isin(st.session_state.cart)]
+    selected_books_df = books[books['title'].isin(cart)]
     if not selected_books_df.empty:
         # Get the most frequent genre among the selected books
         most_frequent_genre = selected_books_df['genre'].mode().iat[0]
@@ -70,7 +59,7 @@ if st.button('Get Recommendations'):
         for index, row in recommended_books.iterrows():
             add_button = st.button(f"Add to Cart: {row['title']}")
             if add_button:
-                st.session_state.cart.append(row['title'])
+                cart.append(row['title'])
             st.write(f"**Title:** {row['title']}")
             st.write(f"**Genre:** {row['genre']}")
             st.write('---')
@@ -83,6 +72,9 @@ if not genre_filtered_books.empty:
     # Display available books as a table with checkboxes
     st.write("ANOTHER DATA INSIDE THE TABLE FOR EXAMPLE")
     for index, row in genre_filtered_books.iterrows():
-        st.write(f"{row['no']}\t{row['title']}\t{row['genre']}\t{row['price']}\t{row['rate']}\t{st.checkbox(f'Add to Cart: {row["title"]}', key=f'add_{index}')}")
+        add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f'add_{index}')
+        if add_to_cart:
+            cart.append(row['title'])
+        st.write(f"{row['no']}\t{row['title']}\t{row['genre']}\t{row['price']}\t{row['rate']}")
 else:
     st.write("No books available in this genre.")
