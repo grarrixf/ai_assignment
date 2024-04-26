@@ -37,28 +37,26 @@ def perform_clustering(data):
 kmeans_model = perform_clustering(books)
 
 # Display books by genre
-genre_list = books['genre'].unique()
-
-st.title('Books by Genre')
-
-for genre in genre_list:
-    st.header(genre)
+def display_books_by_genre(genre):
     genre_books = books[books['genre'] == genre]
+    for _, row in genre_books.iterrows():
+        if st.button(f"Add '{row['title']}' to Cart"):
+            st.session_state.cart.append(row['title'])
     st.write(genre_books[['title', 'price', 'rate']])
 
 # Initialize shopping cart
 if 'cart' not in st.session_state:
     st.session_state.cart = []
 
-# Add selected books to the cart
-st.sidebar.title('Shopping Cart')
+st.title('Books by Genre')
 
-for genre in genre_list:
-    selected_books = st.sidebar.selectbox(f'Add {genre} books to cart:', books[books['genre'] == genre]['title'])
-    if selected_books not in st.session_state.cart:
-        st.session_state.cart.append(selected_books)
+# Display genres and books
+for genre in books['genre'].unique():
+    st.header(genre)
+    display_books_by_genre(genre)
 
 # Show shopping cart
+st.sidebar.title('Shopping Cart')
 st.sidebar.subheader('Your Cart')
 for item in st.session_state.cart:
     st.sidebar.write(item)
