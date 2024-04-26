@@ -33,12 +33,13 @@ if 'cart' not in st.session_state:
 st.sidebar.subheader('Cart')
 items_to_remove = []
 for idx, item in enumerate(st.session_state.cart):
-    if st.sidebar.button(f"Remove: {item}"):
-        items_to_remove.append(idx)
+    remove_button = st.sidebar.button(f"Remove: {item}", key=f"remove_{idx}")
+    if remove_button:
+        items_to_remove.append(item)
 
 # Remove items from cart
-for idx in items_to_remove:
-    st.session_state.cart.pop(idx)
+for item in items_to_remove:
+    st.session_state.cart.remove(item)
 
 # Recommendation layout
 st.write("# Book Recommendations")
