@@ -42,14 +42,15 @@ st.write("# Book Recommendations")
 
 # Get recommendations based on selected books
 if st.button('Get Recommendations'):
-    selected_books_df = books[books['title'].isin(cart)]
+    selected_books_df = books[books['title'].isin([row['title'] for row in genre_filtered_books])]
     if not selected_books_df.empty:
         # Get the most frequent genre among the selected books
         most_frequent_genre = selected_books_df['genre'].mode().iat[0]
         # Filter books of the most frequent genre
         genre_filtered_books = books[books['genre'] == most_frequent_genre]
         # Perform KMeans clustering on the filtered books
-        kmeans_model = perform_clustering(genre_filtered_books)
+        kmeans_model = KMeans(n_clusters=10, random_state=42, n_init=10)
+        kmeans_model.fit(genre_filtered_books[['price', 'rate']])
         # Predict clusters for the selected books
         recommended_books_indices = kmeans_model.predict(selected_books_df[['price', 'rate']])
         # Get the recommended books from the same genre as the majority of selected books
@@ -71,5 +72,7 @@ if not genre_filtered_books.empty:
     # Display available books as a table with checkboxes
     for index, row in genre_filtered_books.iterrows():
         add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f'add_{index}')
+        if add_to_cart:
+            cart.append(row['title'])
 else:
     st.write("No books available in this genre.")
