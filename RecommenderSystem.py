@@ -69,15 +69,13 @@ if st.button('Get Recommendations'):
                 recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
                 if recommended_books_indices:
                     # Shuffle indices to get random recommendations
-                    random_indices = recommended_books_indices.copy()
-                    random.shuffle(random_indices)
-                    # Ensure random_indices does not exceed the length of the DataFrame
-                    random_indices = random_indices[:min(len(random_indices), num_recommended_books)]
-                    if len(random_indices) > 0:
-                        genre_recommended_books = genre_books.iloc[random_indices].drop_duplicates(subset='title')
-                        # Limit the number of recommended books for this genre
-                        genre_recommended_books = genre_recommended_books.head(num_recommended_books)
-                        recommended_books = recommended_books.append(genre_recommended_books)
+                    random.shuffle(recommended_books_indices)
+                    # Ensure recommended_books_indices does not exceed the length of the DataFrame
+                    recommended_books_indices = recommended_books_indices[:min(len(recommended_books_indices), num_recommended_books)]
+                    genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
+                    # Limit the number of recommended books for this genre
+                    genre_recommended_books = genre_recommended_books.head(num_recommended_books)
+                    recommended_books = recommended_books.append(genre_recommended_books)
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
             add_button = st.button(f"Add to Cart: {row['title']}")
