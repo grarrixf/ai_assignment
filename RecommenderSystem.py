@@ -74,8 +74,3 @@ if st.sidebar.button('Get Recommendations'):
         st.write(recommended_books[['title', 'genre']])
     else:
         st.write("No books selected.")
-
-        st.write("Recommended Books:")
-        st.write(recommended_books[['title', 'genre']])
-    else:
-        st.write("No books selected.")
