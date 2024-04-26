@@ -46,14 +46,15 @@ st.write("# Book Recommendations")
 
 # Get recommendations based on selected books
 if st.button('Get Recommendations'):
-    selected_books_df = books[books['title'].isin(genre_filtered_books['title'])]
+    selected_books_titles = genre_filtered_books['title'].unique()
+    selected_books_df = books[books['title'].isin(selected_books_titles)]
     if not selected_books_df.empty:
         # Get the most frequent genre among the selected books
         most_frequent_genre = selected_books_df['genre'].mode().iat[0]
         # Filter books of the most frequent genre
         genre_filtered_books = books[books['genre'] == most_frequent_genre]
         # Perform KMeans clustering on the filtered books
-        kmeans_model = KMeans(n_clusters=10, random_state=42, n_init=10)
+        kmeans_model = KMeans(n_clusters=min(10, len(genre_filtered_books)), random_state=42)
         kmeans_model.fit(genre_filtered_books[['price', 'rate']])
         # Predict clusters for the selected books
         recommended_books_indices = kmeans_model.predict(selected_books_df[['price', 'rate']])
