@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 
 # Load the dataset
-books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
+books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
 
 # Drop rows with missing values in the genre column
 books.dropna(subset=['genre'], inplace=True)
