@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 
 # Load the dataset
-@st.cache_data  # Use st.cache_data instead of st.cache
+@st.cache_data
 def load_data():
     books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
     books.dropna(subset=['genre'], inplace=True)
@@ -15,11 +15,26 @@ def load_data():
 
 books = load_data()
 
-# Perform K-Means clustering
-kmeans = KMeans(n_clusters=10, random_state=42)
-book_features = books[['price', 'rate']].values
-kmeans.fit(book_features)
-books['cluster'] = kmeans.labels_
+# Perform KMeans clustering
+def perform_clustering(data):
+    # Pivot table to create item feature matrix
+    pivot_table = pd.pivot_table(data, index='title', columns='genre', values=['price', 'rate'])
+    pivot_table.columns = pivot_table.columns.droplevel(0)
+    pivot_table.fillna(0, inplace=True)
+    
+    # Convert pivot table to a sparse matrix
+    from scipy.sparse import csr_matrix
+    sparse_matrix = csr_matrix(pivot_table.values)
+    
+    # Initialize KMeans model
+    kmeans = KMeans(n_clusters=10, random_state=42, n_init=10)
+    
+    # Fit the model to the sparse matrix
+    kmeans.fit(sparse_matrix)
+    
+    return kmeans
+
+kmeans_model = perform_clustering(books)
 
 # Display books by genre
 genre_list = books['genre'].unique()
@@ -31,50 +46,36 @@ for genre in genre_list:
     genre_books = books[books['genre'] == genre]
     st.write(genre_books[['title', 'price', 'rate']])
 
+# Initialize shopping cart
+if 'cart' not in st.session_state:
+    st.session_state.cart = []
+
 # Add selected books to the cart
 st.sidebar.title('Shopping Cart')
-selected_books = st.sidebar.multiselect('Add books to cart:', books['title'])
-if selected_books:
-    selected_books_df = books[books['title'].isin(selected_books)]
-    for index, row in selected_books_df.iterrows():
-        st.sidebar.write(row['title'], row['price'], row['rate'])
 
-# Define function to recommend books based on selected books
-def recommend_books(selected_books_df, num_recommendations=5):
-    if selected_books_df.empty:
-        st.write("Please select some books first.")
-        return None
-    
-    selected_genres = selected_books_df['genre'].tolist()
-    genre_filtered_books = books[books['genre'].isin(selected_genres)]
-    
-    if genre_filtered_books.empty:
-        st.write("No matching books found in the dataset.")
-        return None
-    
-    # Calculate mean rating for selected books
-    mean_rate = selected_books_df['rate'].mean()
-    
-    # Get the most frequent genre among selected books
-    most_frequent_genre = selected_books_df['genre'].mode().iat[0]
-    
-    # Filter books by most frequent genre
-    genre_filtered_books = genre_filtered_books[genre_filtered_books['genre'] == most_frequent_genre]
-    
-    # Filter books based on price
-    max_price = selected_books_df['price'].max()
-    genre_filtered_books = genre_filtered_books[genre_filtered_books['price'] <= max_price]
-    
-    # Exclude selected books from recommendations
-    recommended_books = genre_filtered_books[~genre_filtered_books['title'].isin(selected_books_df['title'])]
-    
-    # Sort recommended books by rating and price
-    recommended_books = recommended_books.sort_values(by=['rate', 'price'], ascending=[False, True]).head(num_recommendations)
-    
-    return recommended_books
+for genre in genre_list:
+    selected_books = st.sidebar.selectbox(f'Add {genre} books to cart:', books[books['genre'] == genre]['title'])
+    if selected_books not in st.session_state.cart:
+        st.session_state.cart.append(selected_books)
 
-# Call the recommend_books function and display recommendations
-recommended_books = recommend_books(selected_books_df)
-if recommended_books is not None and not recommended_books.empty:
-    st.subheader('Recommended Books:')
-    st.write(recommended_books[['title', 'price', 'rate']])
+# Show shopping cart
+st.sidebar.subheader('Your Cart')
+for item in st.session_state.cart:
+    st.sidebar.write(item)
+
+# Clear the cart
+if st.sidebar.button('Clear Cart'):
+    st.session_state.cart = []
+
+# Recommend books based on selected books
+if st.sidebar.button('Get Recommendations'):
+    selected_books_df = books[books['title'].isin(st.session_state.cart)]
+    if not selected_books_df.empty:
+        recommended_books_indices = kmeans_model.predict(selected_books_df[['price', 'rate']])
+        recommended_books = pd.DataFrame(columns=books.columns)
+        for index in recommended_books_indices:
+            recommended_books = pd.concat([recommended_books, books[books.index == index]])
+        st.write("Recommended Books:")
+        st.write(recommended_books[['title', 'genre']])
+    else:
+        st.write("No books selected.")
