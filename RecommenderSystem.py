@@ -17,21 +17,8 @@ books = load_data()
 
 # Perform KMeans clustering
 def perform_clustering(data):
-    # Pivot table to create item feature matrix
-    pivot_table = pd.pivot_table(data, index='title', columns='genre', values=['price', 'rate'])
-    pivot_table.columns = pivot_table.columns.droplevel(0)
-    pivot_table.fillna(0, inplace=True)
-    
-    # Convert pivot table to a sparse matrix
-    from scipy.sparse import csr_matrix
-    sparse_matrix = csr_matrix(pivot_table.values)
-    
-    # Initialize KMeans model
     kmeans = KMeans(n_clusters=10, random_state=42, n_init=10)
-    
-    # Fit the model to the sparse matrix
-    kmeans.fit(sparse_matrix)
-    
+    kmeans.fit(data[['price', 'rate']])
     return kmeans
 
 kmeans_model = perform_clustering(books)
@@ -52,7 +39,7 @@ st.title('Books by Genre')
 
 # Display genre buttons
 genres = books['genre'].unique()
-selected_genre = st.selectbox('Select a Genre:', genres)
+selected_genre = st.sidebar.selectbox('Select a Genre:', genres)
 
 # Display books for the selected genre
 if selected_genre:
@@ -73,14 +60,8 @@ if st.sidebar.button('Clear Cart'):
 if st.sidebar.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin(st.session_state.cart)]
     if not selected_books_df.empty:
-        st.write("Selected Books:")
-        st.write(selected_books_df[['title', 'price', 'rate']])
-        st.write("Shape of selected_books_df:", selected_books_df.shape) # Debug
         recommended_books_indices = kmeans_model.predict(selected_books_df[['price', 'rate']])
-        st.write("Recommended Books Indices:", recommended_books_indices) # Debug
-        recommended_books = pd.DataFrame(columns=books.columns)
-        for index in recommended_books_indices:
-            recommended_books = pd.concat([recommended_books, books[books.index == index]])
+        recommended_books = books.iloc[recommended_books_indices]
         st.write("Recommended Books:")
         st.write(recommended_books[['title', 'genre']])
     else:
