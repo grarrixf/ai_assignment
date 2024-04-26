@@ -78,9 +78,7 @@ if st.button('Get Recommendations'):
 st.write("## Available Books")
 if not genre_filtered_books.empty:
     # Add a checkbox column to mark selected books
-    genre_filtered_books['Add to Cart'] = False
-    # Display books as a table
-    selected_books_index = st.session_state.selected_books_index
+    selected_books_index = st.session_state.get('selected_books_index', [])
     if selected_books_index is None:
         selected_books_index = []
     for index, row in genre_filtered_books.iterrows():
@@ -88,7 +86,7 @@ if not genre_filtered_books.empty:
         if add_to_cart:
             selected_books_index.append(index)
         genre_filtered_books.at[index, 'Add to Cart'] = add_to_cart
-    st.session_state.selected_books_index = selected_books_index
+    st.session_state['selected_books_index'] = selected_books_index
     st.write(genre_filtered_books[['title', 'genre', 'price', 'rate', 'Add to Cart']])
 else:
     st.write("No books available in this genre.")
