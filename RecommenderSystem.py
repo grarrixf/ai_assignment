@@ -17,8 +17,7 @@ books['price'] = pd.to_numeric(books['price'], errors='coerce')
 books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
 
 # Sidebar to select books
-st.sidebar.header('Add Books to Cart')
-st.sidebar.subheader('Available Books')
+st.sidebar.header('Available Books')
 
 # Display genres as buttons
 selected_genre = st.sidebar.radio("Select Genre", books['genre'].unique())
