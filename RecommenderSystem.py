@@ -65,7 +65,7 @@ if st.button('Get Recommendations'):
         # Predict clusters for the selected books
         recommended_books_indices = kmeans_model.predict(selected_books_df[['price', 'rate']])
         # Get the recommended books from the same genre as the majority of selected books
-        recommended_books = genre_filtered_books.iloc[recommended_books_indices]
+        recommended_books = genre_filtered_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
         st.write("Recommended Books:")
         st.write(recommended_books[['title', 'genre']])
     else:
