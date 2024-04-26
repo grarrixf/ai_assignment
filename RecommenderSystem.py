@@ -5,7 +5,7 @@ from sklearn.cluster import KMeans
 # Load the dataset
 @st.cache_data
 def load_data():
-    books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
+    books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
     books.dropna(subset=['genre'], inplace=True)
     books = books[['bookTitle', 'bookPrice', 'rating', 'genre']]
     books.rename(columns={'bookTitle': 'title', 'bookPrice': 'price', 'rating': 'rate'}, inplace=True)
@@ -73,7 +73,11 @@ if st.sidebar.button('Clear Cart'):
 if st.sidebar.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin(st.session_state.cart)]
     if not selected_books_df.empty:
+        st.write("Selected Books:")
+        st.write(selected_books_df[['title', 'price', 'rate']])
+        st.write("Shape of selected_books_df:", selected_books_df.shape) # Debug
         recommended_books_indices = kmeans_model.predict(selected_books_df[['price', 'rate']])
+        st.write("Recommended Books Indices:", recommended_books_indices) # Debug
         recommended_books = pd.DataFrame(columns=books.columns)
         for index in recommended_books_indices:
             recommended_books = pd.concat([recommended_books, books[books.index == index]])
