@@ -1,81 +1,83 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from scipy.sparse import csr_matrix
-from sklearn.neighbors import NearestNeighbors
-from fuzzywuzzy import process
+from sklearn.cluster import KMeans
 
 # Load the dataset
-books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
-books.dropna(subset=['genre'], inplace=True)
+@st.cache  # Cache the loaded dataset to speed up app performance
+def load_data():
+    books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
+    books.dropna(subset=['genre'], inplace=True)
+    books = books[['bookTitle', 'bookPrice', 'rating', 'genre']]
+    books.rename(columns={'bookTitle': 'title', 'bookPrice': 'price', 'rating': 'rate'}, inplace=True)
+    books['price'] = pd.to_numeric(books['price'], errors='coerce')
+    books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
+    return books
 
-# Keep only relevant columns and rename them
-books = books[['rank', 'bookTitle', 'bookPrice', 'rating', 'genre']]
-books.rename(columns={'rank': 'no', 'bookTitle': 'title', 'bookPrice': 'price', 'rating': 'rate'}, inplace=True)
+books = load_data()
 
-# Convert price and rating to numeric
-books['price'] = pd.to_numeric(books['price'], errors='coerce')
-books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
+# Sidebar - Book Selection
+st.sidebar.title('Select Books')
+selected_books = st.sidebar.multiselect('Select books:', books['title'])
 
-# Pivot table to show the item feature matrix
-book_pivot = pd.pivot_table(books, index='title', columns='genre', values=['price', 'rate'])
-book_pivot.columns = book_pivot.columns.droplevel(0)
-book_pivot.fillna(0, inplace=True)
+# Filter books based on selected titles
+selected_books_df = books[books['title'].isin(selected_books)]
 
-# Convert pivot table to a sparse matrix
-book_sparse = csr_matrix(book_pivot.values)
+# Display selected books
+if not selected_books_df.empty:
+    st.subheader('Selected Books:')
+    st.write(selected_books_df)
 
-# Initialize the Nearest Neighbors model (K-Means)
-model = NearestNeighbors(algorithm='brute')
-model.fit(book_sparse)
+# Display recommendation section
+st.header('Recommendations')
 
-# Set the index of books DataFrame to title
-books.set_index('title', inplace=True)
+# Define function to recommend books based on selected books
+def recommend_books(selected_books_df, n=5):
+    if selected_books_df.empty:
+        st.write("Please select some books first.")
+        return
+    
+    selected_genres = selected_books_df['genre'].tolist()
+    genre_filtered_books = books[books['genre'].isin(selected_genres)]
+    
+    if genre_filtered_books.empty:
+        st.write("No matching books found in the dataset.")
+        return
+    
+    # Calculate mean rating for selected books
+    mean_rate = selected_books_df['rate'].mean()
+    
+    # Get the most frequent genre among selected books
+    most_frequent_genre = selected_books_df['genre'].mode().iat[0]
+    
+    # Filter books by most frequent genre
+    genre_filtered_books = genre_filtered_books[genre_filtered_books['genre'] == most_frequent_genre]
+    
+    # Filter books based on price
+    max_price = selected_books_df['price'].max()
+    genre_filtered_books = genre_filtered_books[genre_filtered_books['price'] <= max_price]
+    
+    # Exclude selected books from recommendations
+    recommended_books = genre_filtered_books[~genre_filtered_books['title'].isin(selected_books_df['title'])]
+    
+    # Sort recommended books by rating and price
+    recommended_books = recommended_books.sort_values(by=['rate', 'price'], ascending=[False, True]).head(n)
+    
+    return recommended_books
 
-# Function to recommend books
-def recommend_books(book_features, n=5):
-    book_features['genre'] = book_features['genre'].str.lower()
-    recommended_books = []
+# Call the recommend_books function and display recommendations
+recommended_books = recommend_books(selected_books_df)
+if not recommended_books.empty:
+    st.subheader('Recommended Books:')
+    st.write(recommended_books)
 
-    for genre in book_features['genre']:
-        genre_matches = book_pivot.columns.str.lower() == genre
-        if genre_matches.any():
-            genre_books = book_pivot.loc[:, genre_matches]
-            genre_books = genre_books[genre_books.sum(axis=1) > 0]
-        else:
-            closest_genre, score = process.extractOne(genre, books['genre'], scorer=process.WRatio)
-            if score < 70:
-                st.warning(f"No books found for the specific genre '{genre}'.")
-                continue
-            genre_books = book_pivot.loc[:, closest_genre]
-            genre_books = genre_books[genre_books.sum(axis=1) > 0]
+# Add selected books to the cart
+if not selected_books_df.empty:
+    st.sidebar.subheader('Shopping Cart')
+    for index, row in selected_books_df.iterrows():
+        st.sidebar.write(row['title'], row['genre'], row['price'], row['rate'])
 
-        if len(genre_books) > 0:
-            distances, indices = model.kneighbors(book_pivot.loc[genre_books.index].values, n_neighbors=n+1)
-            for idx in indices[0][1:]:
-                recommended_books.append(book_pivot.index[idx])
-        else:
-            st.warning(f"No books found for the specific genre '{genre}'.")
-
-    if recommended_books:
-        recommended_books = sorted(recommended_books, key=lambda x: (books.loc[x, 'rate'], -books.loc[x, 'price']), reverse=True)
-        st.write("\nRecommendations:")
-        for i, book in enumerate(recommended_books[:n]):
-            st.write(f"{i+1}: {book}")
-    else:
-        st.warning("No recommendations found.")
-
-# Streamlit UI
-st.title("Book Recommendation System")
-st.sidebar.title("Input Book Details")
-
-# Sidebar inputs
-genre = st.sidebar.text_input("Enter Genre:", "Childrens")
-price = st.sidebar.number_input("Enter Price:", min_value=0.0, max_value=100.0)
-rating = st.sidebar.slider("Select Rating:", min_value=0.0, max_value=5.0, value=4.5, step=0.1)
-
-if st.sidebar.button("Get Recommendations"):
-    sample_book = pd.DataFrame({'price': [price], 'rate': [rating], 'genre': [genre]})
-    recommend_books(sample_book)
-
-st.sidebar.write("Created by Your Name")
+# Add recommended books to the cart
+if not recommended_books.empty:
+    st.sidebar.subheader('Shopping Cart')
+    for index, row in recommended_books.iterrows():
+        st.sidebar.write(row['title'], row['genre'], row['price'], row['rate'])
