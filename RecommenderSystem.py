@@ -46,7 +46,7 @@ st.write("# Book Recommendations")
 
 # Get recommendations based on selected books
 if st.button('Get Recommendations'):
-    selected_books_df = books[books['title'].isin([row['title'] for row in genre_filtered_books])]
+    selected_books_df = books[books['title'].isin(genre_filtered_books['title'])]
     if not selected_books_df.empty:
         # Get the most frequent genre among the selected books
         most_frequent_genre = selected_books_df['genre'].mode().iat[0]
