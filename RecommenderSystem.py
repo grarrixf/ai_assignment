@@ -5,7 +5,7 @@ from sklearn.cluster import KMeans
 # Load the dataset
 @st.cache_data
 def load_data():
-    books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
+    books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
     books.dropna(subset=['genre'], inplace=True)
     books = books[['bookTitle', 'bookPrice', 'rating', 'genre']]
     books.rename(columns={'bookTitle': 'title', 'bookPrice': 'price', 'rating': 'rate'}, inplace=True)
