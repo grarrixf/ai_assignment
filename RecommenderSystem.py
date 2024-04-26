@@ -55,7 +55,7 @@ if st.button('Get Recommendations'):
             # Filter books from the selected genre
             genre_books = books[books['genre'] == genre]
             # Calculate the number of recommended books for this genre
-            num_recommended_books = int(len(selected_books_df) * percentage)
+            num_recommended_books = max(int(len(selected_books_df) * percentage), 1)
             # Perform KMeans clustering on the genre books
             if num_recommended_books > 0:
                 kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
@@ -67,7 +67,10 @@ if st.button('Get Recommendations'):
                 # Filter books from the same cluster as selected books
                 recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
                 if recommended_books_indices:
-                    genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
+                    # Shuffle indices to get random recommendations
+                    random_indices = recommended_books_indices.copy()
+                    random.shuffle(random_indices)
+                    genre_recommended_books = genre_books.iloc[random_indices].drop_duplicates(subset='title')
                     # Limit the number of recommended books for this genre
                     genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                     recommended_books = recommended_books.append(genre_recommended_books)
