@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 
 # Load the dataset
-books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
+books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
 
 # Drop rows with missing values in the genre column
 books.dropna(subset=['genre'], inplace=True)
@@ -41,12 +41,6 @@ selected_genre = st.sidebar.radio("Select Genre", books['genre'].unique())
 # Filter books based on selected genre
 genre_filtered_books = books[books['genre'] == selected_genre]
 
-# Display books of selected genre
-for index, row in genre_filtered_books.iterrows():
-    add_button = st.sidebar.button(f"Add to Cart: {row['title']}")
-    if add_button:
-        st.session_state.cart.append(row['title'])
-
 # Display cart contents
 st.sidebar.subheader('Cart')
 for item in st.session_state.cart:
@@ -79,3 +73,22 @@ if st.button('Get Recommendations'):
             st.write('---')
     else:
         st.write("No books selected.")
+
+# Display available books
+st.write("## Available Books")
+if not genre_filtered_books.empty:
+    # Add a checkbox column to mark selected books
+    genre_filtered_books['Add to Cart'] = False
+    # Display books as a table
+    selected_books_index = st.session_state.selected_books_index
+    if selected_books_index is None:
+        selected_books_index = []
+    for index, row in genre_filtered_books.iterrows():
+        add_to_cart = st.checkbox(label='', value=False, key=index)
+        if add_to_cart:
+            selected_books_index.append(index)
+        genre_filtered_books.at[index, 'Add to Cart'] = add_to_cart
+    st.session_state.selected_books_index = selected_books_index
+    st.write(genre_filtered_books[['title', 'genre', 'price', 'rate', 'Add to Cart']])
+else:
+    st.write("No books available in this genre.")
