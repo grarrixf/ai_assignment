@@ -80,6 +80,6 @@ if not genre_filtered_books.empty:
     # Add checkbox column
     if selected_genre == "Fantasy":  # Display checkbox only for the selected genre table
         genre_filtered_books['Add to Cart'] = [st.checkbox("", value=False, key=index) for index in genre_filtered_books.index]
-    st.write(genre_filtered_books[['title', 'genre', 'price', 'rate', 'Add to Cart']])
+    st.write(genre_filtered_books[['title', 'genre', 'price', 'rate']])  # Removed 'Add to Cart' from here
 else:
     st.write("No books available in this genre.")
