@@ -15,31 +15,29 @@ def load_data():
 
 books = load_data()
 
-# Sidebar - Book Selection
-st.sidebar.title('Select Books')
-selected_books = st.sidebar.multiselect('Select books:', books['title'])
-
-# Filter books based on selected titles
-selected_books_df = books[books['title'].isin(selected_books)]
-
-# Display selected books
-if not selected_books_df.empty:
-    st.subheader('Selected Books:')
-    st.write(selected_books_df)
-
-# Sidebar - K-Means clustering
-st.sidebar.title('K-Means Clustering')
-num_clusters = st.sidebar.slider('Select number of clusters:', min_value=2, max_value=10, value=5)
-
 # Perform K-Means clustering
-kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+kmeans = KMeans(n_clusters=10, random_state=42)
 book_features = books[['price', 'rate']].values
 kmeans.fit(book_features)
 books['cluster'] = kmeans.labels_
 
-# Display clusters
-st.header('Clusters')
-st.write(books[['title', 'cluster']])
+# Display books by genre
+genre_list = books['genre'].unique()
+
+st.title('Books by Genre')
+
+for genre in genre_list:
+    st.header(genre)
+    genre_books = books[books['genre'] == genre]
+    st.write(genre_books[['title', 'price', 'rate']])
+
+# Add selected books to the cart
+st.sidebar.title('Shopping Cart')
+selected_books = st.sidebar.multiselect('Add books to cart:', books['title'])
+if selected_books:
+    selected_books_df = books[books['title'].isin(selected_books)]
+    for index, row in selected_books_df.iterrows():
+        st.sidebar.write(row['title'], row['price'], row['rate'])
 
 # Define function to recommend books based on selected books
 def recommend_books(selected_books_df, num_recommendations=5):
@@ -79,16 +77,4 @@ def recommend_books(selected_books_df, num_recommendations=5):
 recommended_books = recommend_books(selected_books_df)
 if recommended_books is not None and not recommended_books.empty:
     st.subheader('Recommended Books:')
-    st.write(recommended_books)
-
-# Add selected books to the cart
-if not selected_books_df.empty:
-    st.sidebar.subheader('Shopping Cart')
-    for index, row in selected_books_df.iterrows():
-        st.sidebar.write(row['title'], row['genre'], row['price'], row['rate'])
-
-# Add recommended books to the cart
-if recommended_books is not None and not recommended_books.empty:
-    st.sidebar.subheader('Shopping Cart')
-    for index, row in recommended_books.iterrows():
-        st.sidebar.write(row['title'], row['genre'], row['price'], row['rate'])
+    st.write(recommended_books[['title', 'price', 'rate']])
