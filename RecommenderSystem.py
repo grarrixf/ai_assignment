@@ -48,16 +48,28 @@ st.write("# Book Recommendations")
 if st.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin(st.session_state.cart)]
     if not selected_books_df.empty:
-        # Perform KMeans clustering on the selected books
-        kmeans_model = KMeans(n_clusters=min(10, len(selected_books_df)), random_state=42)
-        kmeans_model.fit(selected_books_df[['price', 'rate']])
-        # Predict clusters for all books
-        all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
-        # Get cluster for selected books
-        selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
-        # Filter books from the same cluster as selected books
-        recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
-        recommended_books = books.iloc[recommended_books_indices].drop_duplicates(subset='title')
+        # Calculate the percentage of each genre in the cart
+        genre_counts = selected_books_df['genre'].value_counts(normalize=True)
+        recommended_books = pd.DataFrame(columns=books.columns)
+        for genre, percentage in genre_counts.items():
+            # Filter books from the selected genre
+            genre_books = books[books['genre'] == genre]
+            # Calculate the number of recommended books for this genre
+            num_recommended_books = int(len(selected_books_df) * percentage)
+            # Perform KMeans clustering on the genre books
+            if num_recommended_books > 0:
+                kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
+                kmeans_model.fit(genre_books[['price', 'rate']])
+                # Predict clusters for all books
+                all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
+                # Get cluster for selected books
+                selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
+                # Filter books from the same cluster as selected books
+                recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
+                genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
+                # Limit the number of recommended books for this genre
+                genre_recommended_books = genre_recommended_books.head(num_recommended_books)
+                recommended_books = recommended_books.append(genre_recommended_books)
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
             add_button = st.button(f"Add to Cart: {row['title']}")
