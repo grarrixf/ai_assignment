@@ -25,17 +25,20 @@ selected_genre = st.sidebar.radio("Select Genre", books['genre'].unique())
 # Filter books based on selected genre
 genre_filtered_books = books[books['genre'] == selected_genre]
 
+# Initialize cart
+if 'cart' not in st.session_state:
+    st.session_state.cart = []
+
 # Display cart contents
 st.sidebar.subheader('Cart')
-cart = st.session_state.cart if 'cart' in st.session_state else []
 items_to_remove = []
-for idx, item in enumerate(cart):
+for idx, item in enumerate(st.session_state.cart):
     if st.sidebar.button(f"Remove: {item}"):
         items_to_remove.append(idx)
 
 # Remove items from cart
 for idx in items_to_remove:
-    cart.pop(idx)
+    st.session_state.cart.pop(idx)
 
 # Recommendation layout
 st.write("# Book Recommendations")
@@ -59,7 +62,7 @@ if st.button('Get Recommendations'):
         for index, row in recommended_books.iterrows():
             add_button = st.button(f"Add to Cart: {row['title']}")
             if add_button:
-                cart.append(row['title'])
+                st.session_state.cart.append(row['title'])
             st.write(f"**Title:** {row['title']}")
             st.write(f"**Genre:** {row['genre']}")
             st.write('---')
@@ -71,8 +74,8 @@ st.write("## Available Books")
 if not genre_filtered_books.empty:
     # Display available books as a table with checkboxes
     for index, row in genre_filtered_books.iterrows():
-        add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f'add_{index}')
+        add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}')
         if add_to_cart:
-            cart.append(row['title'])
+            st.session_state.cart.append(row['title'])
 else:
     st.write("No books available in this genre.")
