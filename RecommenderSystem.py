@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sklearn.cluster import KMeans
+import random
 
 # Load the dataset
 books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
