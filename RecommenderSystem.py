@@ -1,63 +1,55 @@
-import streamlit as st
-import pandas as pd
 from sklearn.cluster import KMeans
+import pandas as pd
+import streamlit as st
 
 # Load the dataset
-@st.cache_data
-def load_data():
-    books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
-    books.dropna(subset=['genre'], inplace=True)
-    books = books[['bookTitle', 'bookPrice', 'rating', 'genre']]
-    books.rename(columns={'bookTitle': 'title', 'bookPrice': 'price', 'rating': 'rate'}, inplace=True)
-    books['price'] = pd.to_numeric(books['price'], errors='coerce')
-    books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
-    return books
+books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
 
-books = load_data()
+# Drop rows with missing values in the genre column
+books.dropna(subset=['genre'], inplace=True)
+
+# Keep only relevant columns and rename
+books = books[['rank', 'bookTitle', 'bookPrice', 'rating', 'genre']]
+books.rename(columns={'rank': 'no', 'bookTitle': 'title', 'bookPrice': 'price', 'rating': 'rate'}, inplace=True)
+
+# Convert price and rating to numeric
+books['price'] = pd.to_numeric(books['price'], errors='coerce')
+books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
 
 # Perform KMeans clustering
 def perform_clustering(data):
-    kmeans = KMeans(n_clusters=10, random_state=42, n_init=10)
+    # Get the number of unique genres
+    n_genres = len(data['genre'].unique())
+    # Adjust the number of clusters based on the number of unique genres
+    n_clusters = min(10, n_genres)
+    # Perform KMeans clustering
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     kmeans.fit(data[['price', 'rate']])
     return kmeans
 
-kmeans_model = perform_clustering(books)
+# Sidebar to select books
+st.sidebar.header('Add Books to Cart')
+st.sidebar.subheader('Available Books')
 
-# Display books by genre
-def display_books_by_genre(genre):
-    genre_books = books[books['genre'] == genre]
-    for _, row in genre_books.iterrows():
-        if st.button(f"Add '{row['title']}' to Cart"):
-            st.session_state.cart.append(row['title'])
-    st.write(genre_books[['title', 'price', 'rate']])
+# Display genres as buttons
+selected_genre = st.sidebar.radio("Select Genre", books['genre'].unique())
 
-# Initialize shopping cart
-if 'cart' not in st.session_state:
-    st.session_state.cart = []
+# Filter books based on selected genre
+genre_filtered_books = books[books['genre'] == selected_genre]
 
-st.title('Books by Genre')
+# Display books of selected genre
+for index, row in genre_filtered_books.iterrows():
+    add_button = st.sidebar.button(f"Add to Cart: {row['title']}")
+    if add_button:
+        st.session_state.cart.append(row['title'])
 
-# Display genre buttons
-genres = books['genre'].unique()
-selected_genre = st.sidebar.selectbox('Select a Genre:', genres)
-
-# Display books for the selected genre
-if selected_genre:
-    st.header(selected_genre)
-    display_books_by_genre(selected_genre)
-
-# Show shopping cart
-st.sidebar.title('Shopping Cart')
-st.sidebar.subheader('Your Cart')
+# Display cart contents
+st.sidebar.subheader('Cart')
 for item in st.session_state.cart:
     st.sidebar.write(item)
 
-# Clear the cart
-if st.sidebar.button('Clear Cart'):
-    st.session_state.cart = []
-
 # Recommend books based on selected books
-if st.sidebar.button('Get Recommendations'):
+if st.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin(st.session_state.cart)]
     if not selected_books_df.empty:
         # Get the most frequent genre among the selected books
