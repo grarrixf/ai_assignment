@@ -79,7 +79,12 @@ st.write("## Available Books")
 if not genre_filtered_books.empty:
     # Add checkbox column
     if selected_genre == "Fantasy":  # Display checkbox only for the selected genre table
-        genre_filtered_books['Add to Cart'] = [st.checkbox("", value=False, key=index) for index in genre_filtered_books.index]
-    st.write(genre_filtered_books[['title', 'genre', 'price', 'rate']])  # Removed 'Add to Cart' from here
+        genre_filtered_books['Add to Cart'] = [st.checkbox("", value=False, key=f"checkbox_{index}") for index in genre_filtered_books.index]
+        for index, row in genre_filtered_books.iterrows():
+            if row['Add to Cart']:
+                remove_button = st.button(f"Remove from Cart: {row['title']}")
+                if remove_button:
+                    st.session_state.cart.remove(row['title'])
+    st.write(genre_filtered_books[['title', 'genre', 'price', 'rate', 'Add to Cart']])  # Add 'Add to Cart' column
 else:
     st.write("No books available in this genre.")
