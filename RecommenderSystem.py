@@ -16,6 +16,10 @@ books.rename(columns={'rank': 'no', 'bookTitle': 'title', 'bookPrice': 'price', 
 books['price'] = pd.to_numeric(books['price'], errors='coerce')
 books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
 
+# Initialize cart if it doesn't exist
+if 'cart' not in st.session_state:
+    st.session_state.cart = []
+
 # Perform KMeans clustering
 def perform_clustering(data):
     # Get the number of unique genres
