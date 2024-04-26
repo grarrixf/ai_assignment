@@ -43,8 +43,8 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 
 # Display cart contents
 st.sidebar.subheader('Cart')
-for item in st.session_state.cart:
-    if st.sidebar.button(f"Remove: {item}"):
+for idx, item in enumerate(st.session_state.cart):
+    if st.sidebar.button(f"Remove: {item}", key=f"remove_{idx}"):
         st.session_state.cart.remove(item)
     else:
         st.sidebar.write(item)
@@ -82,7 +82,7 @@ st.write("## Available Books")
 if not genre_filtered_books.empty:
     # Display available books as a table with checkboxes
     for index, row in genre_filtered_books.iterrows():
-        add_to_cart = st.checkbox(f"Add to Cart: {row['title']}")
+        add_to_cart = st.checkbox(f"Add to Cart: {row['title']}", key=f"add_{index}")
         if add_to_cart:
             st.session_state.cart.append(row['title'])
     st.write(genre_filtered_books)
