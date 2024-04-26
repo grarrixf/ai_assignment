@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 
 # Load the dataset
-books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
+books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
 
 # Drop rows with missing values in the genre column
 books.dropna(subset=['genre'], inplace=True)
@@ -52,7 +52,10 @@ st.sidebar.subheader('Cart')
 for item in st.session_state.cart:
     st.sidebar.write(item)
 
-# Recommend books based on selected books
+# Recommendation layout
+st.write("# Book Recommendations")
+
+# Get recommendations based on selected books
 if st.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin(st.session_state.cart)]
     if not selected_books_df.empty:
@@ -66,7 +69,13 @@ if st.button('Get Recommendations'):
         recommended_books_indices = kmeans_model.predict(selected_books_df[['price', 'rate']])
         # Get the recommended books from the same genre as the majority of selected books
         recommended_books = genre_filtered_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
-        st.write("Recommended Books:")
-        st.write(recommended_books[['title', 'genre']])
+        st.write("## Recommended Books")
+        for index, row in recommended_books.iterrows():
+            add_button = st.button(f"Add to Cart: {row['title']}")
+            if add_button:
+                st.session_state.cart.append(row['title'])
+            st.write(f"**Title:** {row['title']}")
+            st.write(f"**Genre:** {row['genre']}")
+            st.write('---')
     else:
         st.write("No books selected.")
