@@ -46,20 +46,18 @@ st.write("# Book Recommendations")
 
 # Get recommendations based on selected books
 if st.button('Get Recommendations'):
-    selected_books_titles = genre_filtered_books['title'].unique()
-    selected_books_df = books[books['title'].isin(selected_books_titles)]
+    selected_books_df = books[books['title'].isin(st.session_state.cart)]
     if not selected_books_df.empty:
-        # Get the most frequent genre among the selected books
-        most_frequent_genre = selected_books_df['genre'].mode().iat[0]
-        # Filter books of the most frequent genre
-        genre_filtered_books = books[books['genre'] == most_frequent_genre]
-        # Perform KMeans clustering on the filtered books
-        kmeans_model = KMeans(n_clusters=min(10, len(genre_filtered_books)), random_state=42)
-        kmeans_model.fit(genre_filtered_books[['price', 'rate']])
-        # Predict clusters for the selected books
-        recommended_books_indices = kmeans_model.predict(selected_books_df[['price', 'rate']])
-        # Get the recommended books from the same genre as the majority of selected books
-        recommended_books = genre_filtered_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
+        # Perform KMeans clustering on the selected books
+        kmeans_model = KMeans(n_clusters=min(10, len(selected_books_df)), random_state=42)
+        kmeans_model.fit(selected_books_df[['price', 'rate']])
+        # Predict clusters for all books
+        all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
+        # Get cluster for selected books
+        selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
+        # Filter books from the same cluster as selected books
+        recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
+        recommended_books = books.iloc[recommended_books_indices].drop_duplicates(subset='title')
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
             add_button = st.button(f"Add to Cart: {row['title']}")
