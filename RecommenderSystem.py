@@ -44,7 +44,10 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 # Display cart contents
 st.sidebar.subheader('Cart')
 for item in st.session_state.cart:
-    st.sidebar.write(item)
+    if st.sidebar.button(f"Remove: {item}"):
+        st.session_state.cart.remove(item)
+    else:
+        st.sidebar.write(item)
 
 # Recommendation layout
 st.write("# Book Recommendations")
