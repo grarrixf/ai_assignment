@@ -5,7 +5,7 @@ from sklearn.cluster import KMeans
 # Load the dataset
 @st.cache  # Cache the loaded dataset to speed up app performance
 def load_data():
-    books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
+    books = pd.read_csv('data/AmanzonBooks.csv', sep=',', encoding='latin-1')
     books.dropna(subset=['genre'], inplace=True)
     books = books[['bookTitle', 'bookPrice', 'rating', 'genre']]
     books.rename(columns={'bookTitle': 'title', 'bookPrice': 'price', 'rating': 'rate'}, inplace=True)
@@ -27,21 +27,32 @@ if not selected_books_df.empty:
     st.subheader('Selected Books:')
     st.write(selected_books_df)
 
-# Display recommendation section
-st.header('Recommendations')
+# Sidebar - K-Means clustering
+st.sidebar.title('K-Means Clustering')
+num_clusters = st.sidebar.slider('Select number of clusters:', min_value=2, max_value=10, value=5)
+
+# Perform K-Means clustering
+kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+book_features = books[['price', 'rate']].values
+kmeans.fit(book_features)
+books['cluster'] = kmeans.labels_
+
+# Display clusters
+st.header('Clusters')
+st.write(books[['title', 'cluster']])
 
 # Define function to recommend books based on selected books
-def recommend_books(selected_books_df, n=5):
+def recommend_books(selected_books_df, num_recommendations=5):
     if selected_books_df.empty:
         st.write("Please select some books first.")
-        return
+        return None
     
     selected_genres = selected_books_df['genre'].tolist()
     genre_filtered_books = books[books['genre'].isin(selected_genres)]
     
     if genre_filtered_books.empty:
         st.write("No matching books found in the dataset.")
-        return
+        return None
     
     # Calculate mean rating for selected books
     mean_rate = selected_books_df['rate'].mean()
@@ -60,13 +71,13 @@ def recommend_books(selected_books_df, n=5):
     recommended_books = genre_filtered_books[~genre_filtered_books['title'].isin(selected_books_df['title'])]
     
     # Sort recommended books by rating and price
-    recommended_books = recommended_books.sort_values(by=['rate', 'price'], ascending=[False, True]).head(n)
+    recommended_books = recommended_books.sort_values(by=['rate', 'price'], ascending=[False, True]).head(num_recommendations)
     
     return recommended_books
 
 # Call the recommend_books function and display recommendations
 recommended_books = recommend_books(selected_books_df)
-if not recommended_books.empty:
+if recommended_books is not None and not recommended_books.empty:
     st.subheader('Recommended Books:')
     st.write(recommended_books)
 
@@ -77,7 +88,7 @@ if not selected_books_df.empty:
         st.sidebar.write(row['title'], row['genre'], row['price'], row['rate'])
 
 # Add recommended books to the cart
-if not recommended_books.empty:
+if recommended_books is not None and not recommended_books.empty:
     st.sidebar.subheader('Shopping Cart')
     for index, row in recommended_books.iterrows():
         st.sidebar.write(row['title'], row['genre'], row['price'], row['rate'])
