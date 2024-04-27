@@ -43,6 +43,8 @@ for item in items_to_remove:
 
 # Display available books with scrollbar
 st.write("# Available Books")
+st.write('---')
+
 if not genre_filtered_books.empty:
     with st.container(height=300):  # Set container height to display scrollbar
         for index, row in genre_filtered_books.iterrows():
@@ -54,6 +56,7 @@ else:
 
 # Recommendation layout with scrollbar
 st.write("# Book Recommendations")
+st.write('---')
 
 # Get recommendations based on selected books
 if st.button('Get Recommendations'):
