@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sklearn.cluster import KMeans
-import random
- 
+
 # Load the dataset
 books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
 
@@ -67,13 +66,15 @@ if st.button('Get Recommendations'):
                 selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
                 # Filter books from the same cluster as selected books
                 recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
+                # Ensure recommended_books_indices is not empty and within the bounds of the DataFrame's index
                 if recommended_books_indices:
-                    # Ensure recommended_books_indices does not exceed the length of the DataFrame
                     recommended_books_indices = recommended_books_indices[:min(len(recommended_books_indices), num_recommended_books)]
-                    genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
-                    # Limit the number of recommended books for this genre
-                    genre_recommended_books = genre_recommended_books.head(num_recommended_books)
-                    recommended_books = pd.concat([recommended_books, genre_recommended_books])
+                    recommended_books_indices = [idx for idx in recommended_books_indices if idx < len(genre_books)]
+                    if recommended_books_indices:
+                        genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
+                        # Limit the number of recommended books for this genre
+                        genre_recommended_books = genre_recommended_books.head(num_recommended_books)
+                        recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
             add_button = st.button(f"Add to Cart: {row['title']}")
