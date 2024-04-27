@@ -92,6 +92,5 @@ if st.button('Get Recommendations'):
             for index, row in recommended_books.iterrows():
                     st.session_state.cart.append(row['title'])
                     st.session_state.sync()  # Ensure session state is synchronized
-                st.write('---')
     else:
         st.write("No books selected.")
