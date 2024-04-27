@@ -44,11 +44,21 @@ for item in items_to_remove:
 # Display available books with scrollbar
 st.write("# Available Books")
 if not genre_filtered_books.empty:
-    with st.expander("Available Books"):
-        for index, row in genre_filtered_books.iterrows():
-            add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
+    num_books = len(genre_filtered_books)
+    with st.sidebar:
+        st.write('---')
+        st.write('---')
+    col1, col2 = st.columns(2)
+    with col1:
+        for i in range(num_books // 2 + 1):
+            add_to_cart = st.checkbox(f'Add to Cart: {genre_filtered_books.iloc[i]["title"]}', key=f"checkbox_{i}")
             if add_to_cart:
-                st.session_state.cart.append(row['title'])
+                st.session_state.cart.append(genre_filtered_books.iloc[i]['title'])
+    with col2:
+        for i in range(num_books // 2 + 1, num_books):
+            add_to_cart = st.checkbox(f'Add to Cart: {genre_filtered_books.iloc[i]["title"]}', key=f"checkbox_{i}")
+            if add_to_cart:
+                st.session_state.cart.append(genre_filtered_books.iloc[i]['title'])
 else:
     st.write("No books available in this genre.")
 
@@ -89,9 +99,21 @@ if st.button('Get Recommendations'):
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
-        with st.expander("Recommended Books"):
-            for index, row in recommended_books.iterrows():
-                st.write(f"**Title:** {row['title']}")
-                st.write(f"**Genre:** {row['genre']}")
+        with st.sidebar:
+            st.write('---')
+            st.write('---')
+        col1, col2 = st.columns(2)
+        with col1:
+            for i, (_, row) in enumerate(recommended_books.iloc[:len(recommended_books) // 2].iterrows()):
+                add_button = st.button(f'Add to Cart: {row["title"]}', key=f"add_{i}")  # Use row index as key
+                if add_button:
+                    st.session_state.cart.append(row['title'])
+                    st.session_state.sync()  # Ensure session state is synchronized
+        with col2:
+            for i, (_, row) in enumerate(recommended_books.iloc[len(recommended_books) // 2:].iterrows()):
+                add_button = st.button(f'Add to Cart: {row["title"]}', key=f"add_{i+len(recommended_books)//2}")  # Use row index as key
+                if add_button:
+                    st.session_state.cart.append(row['title'])
+                    st.session_state.sync()  # Ensure session state is synchronized
     else:
         st.write("No books selected.")
