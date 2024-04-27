@@ -80,7 +80,7 @@ if st.button('Get Recommendations'):
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
-            add_button = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
+            add_button = st.checkbox(f'Add to Cart: {row["title"]}', key=str(uuid.uuid4()))
             if add_button:
                 st.session_state.cart.append(row['title'])
                 st.session_state.sync()  # Ensure session state is synchronized
