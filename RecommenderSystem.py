@@ -41,6 +41,17 @@ for idx, item in enumerate(st.session_state.cart):
 for item in items_to_remove:
     st.session_state.cart.remove(item)
 
+# Display available books
+st.write("## Available Books")
+if not genre_filtered_books.empty:
+    # Display available books as a table with checkboxes
+    for index, row in genre_filtered_books.iterrows():
+        add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
+        if add_to_cart:
+            st.session_state.cart.append(row['title'])
+else:
+    st.write("No books available in this genre.")
+
 # Recommendation layout
 st.write("# Book Recommendations")
 
@@ -85,19 +96,3 @@ if st.button('Get Recommendations'):
             st.write('---')
     else:
         st.write("No books selected.")
-            
-# Display available books
-st.write("## Available Books")
-if not genre_filtered_books.empty:
-    # Display available books as a table with checkboxes
-    for index, row in genre_filtered_books.iterrows():
-        add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
-        if add_to_cart:
-            st.session_state.cart.append(row['title'])
-else:
-    st.write("No books available in this genre.")
-
-# Display items in the cart
-st.write("## Items in Cart")
-for item in st.session_state.cart:
-    st.write(item)
