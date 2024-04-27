@@ -79,6 +79,7 @@ if st.button('Get Recommendations'):
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
+            st.write('---')
             st.write(f"**Title:** {row['title']}")
             st.write(f"**Genre:** {row['genre']}")
             st.write('---')
