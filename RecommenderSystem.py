@@ -41,18 +41,18 @@ for idx, item in enumerate(st.session_state.cart):
 for item in items_to_remove:
     st.session_state.cart.remove(item)
 
-# Display available books
+# Display available books with scrollbar
 st.write("# Available Books")
 if not genre_filtered_books.empty:
-    # Display available books as a table with checkboxes
-    for index, row in genre_filtered_books.iterrows():
-        add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
-        if add_to_cart:
-            st.session_state.cart.append(row['title'])
+    with st.beta_expander("Available Books"):
+        for index, row in genre_filtered_books.iterrows():
+            add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
+            if add_to_cart:
+                st.session_state.cart.append(row['title'])
 else:
     st.write("No books available in this genre.")
 
-# Recommendation layout
+# Recommendation layout with scrollbar
 st.write("# Book Recommendations")
 
 # Get recommendations based on selected books
@@ -89,10 +89,9 @@ if st.button('Get Recommendations'):
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
-        st.write('---')
-        for index, row in recommended_books.iterrows():
-            st.write(f"**Title:** {row['title']}")
-            st.write(f"**Genre:** {row['genre']}")
-            st.write('---')
+        with st.beta_expander("Recommended Books"):
+            for index, row in recommended_books.iterrows():
+                st.write(f"**Title:** {row['title']}")
+                st.write(f"**Genre:** {row['genre']}")
     else:
         st.write("No books selected.")
