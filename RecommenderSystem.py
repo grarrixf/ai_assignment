@@ -9,11 +9,10 @@ books = pd.read_csv('Goodreads_books_with_genres.csv', sep=";", error_bad_lines=
 books.dropna(subset=['genre'], inplace=True)
 
 # Keep only relevant columns and rename
-books = books[['rank', 'bookTitle', 'bookPrice', 'rating', 'genre']]
-books.rename(columns={'rank': 'no', 'bookTitle': 'title', 'bookPrice': 'price', 'rating': 'rate'}, inplace=True)
+books = books[['Book Id', 'Title', 'average_rating', 'genre']]
+books.rename(columns={'Book Id': 'no', 'Title': 'title', 'average_rating': 'rate'}, inplace=True)
 
 # Convert price and rating to numeric
-books['price'] = pd.to_numeric(books['price'], errors='coerce')
 books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
 
 # Sidebar to select books
@@ -73,11 +72,11 @@ if st.button('Get Recommendations'):
             # Perform KMeans clustering on the genre books
             if num_recommended_books > 0:
                 kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
-                kmeans_model.fit(genre_books[['price', 'rate']])
+                kmeans_model.fit(genre_books[['rate']])
                 # Predict clusters for all books
-                all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
+                all_books_clusters = kmeans_model.predict(books[['rate']])
                 # Get cluster for selected books
-                selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
+                selected_books_clusters = kmeans_model.predict(selected_books_df[['rate']])
                 # Filter books from the same cluster as selected books
                 recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
                 # Ensure recommended_books_indices is not empty and within the bounds of the DataFrame's index
