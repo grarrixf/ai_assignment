@@ -44,7 +44,7 @@ for item in items_to_remove:
 # Display available books with scrollbar
 st.write("# Available Books")
 if not genre_filtered_books.empty:
-    with st.beta_expander("Available Books"):
+    with st.expander("Available Books"):
         for index, row in genre_filtered_books.iterrows():
             add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
             if add_to_cart:
@@ -89,7 +89,7 @@ if st.button('Get Recommendations'):
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
-        with st.beta_expander("Recommended Books"):
+        with st.expander("Recommended Books"):
             for index, row in recommended_books.iterrows():
                 st.write(f"**Title:** {row['title']}")
                 st.write(f"**Genre:** {row['genre']}")
