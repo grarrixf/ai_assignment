@@ -44,12 +44,11 @@ for item in items_to_remove:
 # Display available books with scrollbar
 st.write("# Available Books")
 if not genre_filtered_books.empty:
-    num_books = len(genre_filtered_books)
-    with st.container():
-        for i in range(num_books):
-            add_to_cart = st.checkbox(f'Add to Cart: {genre_filtered_books.iloc[i]["title"]}', key=f"checkbox_{i}")
+    with st.container(height=300):  # Set container height to display scrollbar
+        for index, row in genre_filtered_books.iterrows():
+            add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
             if add_to_cart:
-                st.session_state.cart.append(genre_filtered_books.iloc[i]['title'])
+                st.session_state.cart.append(row['title'])
 else:
     st.write("No books available in this genre.")
 
@@ -89,9 +88,9 @@ if st.button('Get Recommendations'):
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
-        with st.container():
-            for i, (_, row) in enumerate(recommended_books.iterrows()):
-                add_button = st.button(f'Add to Cart: {row["title"]}', key=f"add_{i}")  # Use row index as key
+        with st.container(height=300):  # Set container height to display scrollbar
+            for index, row in recommended_books.iterrows():
+                add_button = st.button(f'Add to Cart: {row["title"]}', key=f"add_{index}")  # Use row index as key
                 if add_button:
                     st.session_state.cart.append(row['title'])
                     st.session_state.sync()  # Ensure session state is synchronized
