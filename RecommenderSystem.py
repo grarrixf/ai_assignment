@@ -79,15 +79,9 @@ if st.button('Get Recommendations'):
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
-            add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"add_{index}")
-            if add_to_cart:
+            add_button = st.button(f'Add to Cart: {row["title"]}')
+            if add_button:
                 st.session_state.cart.append(row['title'])
-                st.session_state.sync()  # Ensure session state is synchronized
-            st.write(f"**Title:** {row['title']}")
-            st.write(f"**Genre:** {row['genre']}")
-            st.write('---')
-    else:
-        st.write("No books selected.")
 
 # Display available books
 st.write("## Available Books")
