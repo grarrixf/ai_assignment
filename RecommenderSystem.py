@@ -82,12 +82,12 @@ if st.button('Get Recommendations'):
             with st.form(key=f"add_to_cart_{index}"):
                 st.write(f"**Title:** {row['title']}")
                 st.write(f"**Genre:** {row['genre']}")
-                submit_button = st.form_submit_button(label="Add to Cart")
-                if submit_button:
+                add_button = st.form_submit_button(label="Add to Cart")
+                if add_button:
                     st.session_state.cart.append(row['title'])
         else:
             st.write("No books selected.")
-
+            
 # Display available books
 st.write("## Available Books")
 if not genre_filtered_books.empty:
