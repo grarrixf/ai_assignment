@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 
 # Load the dataset
-books = pd.read_csv('Goodreads_books_with_genres.csv', sep=";", error_bad_lines=False, encodings"latin-1")
+books = pd.read_csv('Goodreads_books_with_genres.csv', sep=";", error_bad_lines=False, encoding="latin-1")
 
 # Drop rows with missing values in the genre column
 books.dropna(subset=['genre'], inplace=True)
