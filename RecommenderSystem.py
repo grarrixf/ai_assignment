@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sklearn.cluster import KMeans
+import uuid  # Import uuid module for generating unique identifiers
 
 # Load the dataset
 books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
@@ -79,13 +80,13 @@ if st.button('Get Recommendations'):
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
-            add_button = st.button(f"Add to Cart: {row['title']}", key=f"add_{index}")
+            add_button = st.button(f"Add to Cart: {row['title']}", key=str(uuid.uuid4()))  # Generate a unique key for each button
             if add_button:
                 st.session_state.cart.append(row['title'])
                 st.session_state.sync()  # Ensure session state is synchronized
-                st.write(f"**Title:** {row['title']}")
-                st.write(f"**Genre:** {row['genre']}")
-                st.write('---')
+            st.write(f"**Title:** {row['title']}")
+            st.write(f"**Genre:** {row['genre']}")
+            st.write('---')
     else:
         st.write("No books selected.")
 
