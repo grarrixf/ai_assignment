@@ -83,7 +83,7 @@ if st.button('Get Recommendations'):
             st.write(f"**Title:** {row['title']}")
             st.write(f"**Genre:** {row['genre']}")
             st.write('---')
-            
+    else:
         st.write("No books selected.")
             
 # Display available books
