@@ -72,6 +72,8 @@ if st.button('Get Recommendations'):
                     recommended_books_indices = [idx for idx in recommended_books_indices if idx < len(genre_books)]
                     if recommended_books_indices:
                         genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
+                        # Exclude books already in the cart
+                        genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin(st.session_state.cart)]
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
