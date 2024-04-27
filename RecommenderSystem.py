@@ -44,40 +44,37 @@ for item in items_to_remove:
 # Recommendation layout
 st.write("# Book Recommendations")
 
-# Get recommendations based on all books in the cart
+# Get recommendations based on selected books
 if st.button('Get Recommendations'):
-    if st.session_state.cart:
-        # Filter books from the selected genre
-        genre_books = books[books['genre'] == selected_genre]
-        # Perform KMeans clustering on all genre books
-        kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
-        kmeans_model.fit(genre_books[['price', 'rate']])
-        # Predict clusters for all books
-        all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
-        # Get clusters for books in the cart
-        cart_books = books[books['title'].isin(st.session_state.cart)]
-        cart_clusters = kmeans_model.predict(cart_books[['price', 'rate']])
-        # Filter books from the same cluster as books in the cart
-        recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in cart_clusters]
-        # Ensure recommended_books_indices is not empty and within the bounds of the DataFrame's index
-        if recommended_books_indices:
+    selected_books_df = books[books['title'].isin(st.session_state.cart)]
+    if not selected_books_df.empty:
+        recommended_books = pd.DataFrame(columns=books.columns)
+        for index, row in selected_books_df.iterrows():
+            # Filter books from the selected genre
+            genre_books = books[books['genre'] == row['genre']]
+            # Perform KMeans clustering on the genre books
+            kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
+            kmeans_model.fit(genre_books[['price', 'rate']])
+            # Predict cluster for the selected book
+            selected_book_cluster = kmeans_model.predict([[row['price'], row['rate']]])[0]
+            # Filter books from the same cluster as the selected book
+            recommended_books_indices = [idx for idx, cluster in enumerate(kmeans_model.labels_) if cluster == selected_book_cluster]
             recommended_books_indices = [idx for idx in recommended_books_indices if idx < len(genre_books)]
             if recommended_books_indices:
-                recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
+                genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
                 # Exclude books already in the cart
-                recommended_books = recommended_books[~recommended_books['title'].isin(st.session_state.cart)]
-                # Limit the number of recommended books
-                recommended_books = recommended_books.head(5)  # Limit to 5 recommendations
-                st.write("## Recommended Books")
-                for index, row in recommended_books.iterrows():
-                    add_button = st.button(f"Add to Cart: {row['title']}")
-                    if add_button:
-                        st.session_state.cart.append(row['title'])
-                    st.write(f"**Title:** {row['title']}")
-                    st.write(f"**Genre:** {row['genre']}")
-                    st.write('---')
-        else:
-            st.write("No recommendations available based on the books in the cart.")
+                genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin(st.session_state.cart)]
+                # Limit the number of recommended books for this genre
+                genre_recommended_books = genre_recommended_books.head(2)
+                recommended_books = pd.concat([recommended_books, genre_recommended_books])
+        st.write("## Recommended Books")
+        for index, row in recommended_books.iterrows():
+            add_button = st.button(f"Add to Cart: {row['title']}")
+            if add_button:
+                st.session_state.cart.append(row['title'])
+            st.write(f"**Title:** {row['title']}")
+            st.write(f"**Genre:** {row['genre']}")
+            st.write('---')
     else:
         st.write("No books selected.")
 
