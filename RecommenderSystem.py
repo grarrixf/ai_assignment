@@ -79,7 +79,7 @@ if st.button('Get Recommendations'):
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
-            add_button = st.button(f"Add to Cart: {row['title']}")
+            add_button = st.button(f"Add to Cart: {row['title']}", key=f"add_{index}")
             if add_button:
                 st.session_state.cart.append(row['title'])
             st.write(f"**Title:** {row['title']}")
