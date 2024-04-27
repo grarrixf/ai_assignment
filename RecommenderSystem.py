@@ -89,7 +89,7 @@ if st.button('Get Recommendations'):
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         with st.container(height=300):  # Set container height to display scrollbar
-            st.write('---')
+                st.write('---')
             for index, row in recommended_books.iterrows():
                     st.session_state.cart.append(row['title'])
                     st.session_state.sync()  # Ensure session state is synchronized
