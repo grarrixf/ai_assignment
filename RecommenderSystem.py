@@ -82,7 +82,7 @@ if st.button('Get Recommendations'):
             add_button = st.button(f"Add to Cart: {row['title']}", key=f"add_{index}")
             if add_button:
                 st.session_state.cart.append(row['title'])
-        st.session_state.sync()  # Ensure session state is synchronized
+                st.session_state.sync()  # Ensure session state is synchronized
             st.write(f"**Title:** {row['title']}")
             st.write(f"**Genre:** {row['genre']}")
             st.write('---')
