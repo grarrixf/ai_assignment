@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from sklearn.cluster import KMeans
 import random
- 
+
 # Load the dataset
 books = pd.read_csv('AmanzonBooks.csv', sep=',', encoding='latin-1')
 
@@ -75,7 +75,7 @@ if st.button('Get Recommendations'):
                     genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
                     # Limit the number of recommended books for this genre
                     genre_recommended_books = genre_recommended_books.head(num_recommended_books)
-                    recommended_books = recommended_books.append(genre_recommended_books)
+                    recommended_books = pd.concat([recommended_books, genre_recommended_books])
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
             add_button = st.button(f"Add to Cart: {row['title']}")
