@@ -76,7 +76,7 @@ if st.button('Get Recommendations'):
                         genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin(st.session_state.cart)]
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
-                        recommended_books = pd.concat([recommended_books, genre_recommended_books])
+                        recommended_books = pd.concat([recommended_books, genre_recommended_books], ignore_index=True)
         st.write("## Recommended Books")
         for index, row in recommended_books.iterrows():
             add_button = st.button(f"Add to Cart: {row['title']}")
