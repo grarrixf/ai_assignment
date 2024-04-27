@@ -100,3 +100,8 @@ if not genre_filtered_books.empty:
             st.session_state.cart.append(row['title'])
 else:
     st.write("No books available in this genre.")
+
+# Display items in the cart
+st.write("## Items in Cart")
+for item in st.session_state.cart:
+    st.write(item)
