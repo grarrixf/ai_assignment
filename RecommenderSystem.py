@@ -42,7 +42,7 @@ for item in items_to_remove:
     st.session_state.cart.remove(item)
 
 # Display available books
-st.write("## Available Books")
+st.write("# Available Books")
 if not genre_filtered_books.empty:
     # Display available books as a table with checkboxes
     for index, row in genre_filtered_books.iterrows():
