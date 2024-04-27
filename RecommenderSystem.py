@@ -83,9 +83,9 @@ if st.button('Get Recommendations'):
             if add_button:
                 st.session_state.cart.append(row['title'])
                 st.session_state.sync()  # Ensure session state is synchronized
-            st.write(f"**Title:** {row['title']}")
-            st.write(f"**Genre:** {row['genre']}")
-            st.write('---')
+                st.write(f"**Title:** {row['title']}")
+                st.write(f"**Genre:** {row['genre']}")
+                st.write('---')
     else:
         st.write("No books selected.")
 
