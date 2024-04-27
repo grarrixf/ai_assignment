@@ -68,11 +68,9 @@ if st.button('Get Recommendations'):
                 # Filter books from the same cluster as selected books
                 recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
                 if recommended_books_indices:
-                    # Shuffle indices to get random recommendations
-                    random.shuffle(recommended_books_indices)
                     # Ensure recommended_books_indices does not exceed the length of the DataFrame
                     recommended_books_indices = recommended_books_indices[:min(len(recommended_books_indices), num_recommended_books)]
-                    genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title')
+                    genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
                     # Limit the number of recommended books for this genre
                     genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                     recommended_books = pd.concat([recommended_books, genre_recommended_books])
