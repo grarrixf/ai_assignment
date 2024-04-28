@@ -38,9 +38,12 @@ if not genre_filtered_books.empty:
         for index, row in genre_filtered_books.iterrows():
             add_to_cart = st.button(f'Add to Cart: {row["title"]}', key=f"button_{index}")
             if add_to_cart:
+                print(f"Adding {row['title']} to cart...")
                 if row['title'] in st.session_state.cart:
+                    print(f"Item {row['title']} already in cart")
                     st.session_state.cart[row['title']]['quantity'] += 1
                 else:
+                    print(f"Adding new item {row['title']} to cart")
                     st.session_state.cart[row['title']] = {'price': row['price'], 'quantity': 1}
 else:
     st.write("No books available in this genre.")
