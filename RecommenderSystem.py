@@ -86,8 +86,6 @@ if st.button('Get Recommendations'):
 # Cart
 st.write("# Cart")
 st.write('---')
-
-if st.button('Show Cart'):
     if st.session_state.cart:
         for idx, item in enumerate(st.session_state.cart):
             st.write(f"{idx + 1}. {item}")
