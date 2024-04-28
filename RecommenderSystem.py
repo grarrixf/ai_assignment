@@ -29,9 +29,6 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 if 'cart' not in st.session_state:
     st.session_state.cart = []
 
-# Initialize recommended books DataFrame
-recommended_books = pd.DataFrame(columns=books.columns)
-
 # Display available books with scrollbar
 st.write("# Available Books")
 st.write('---')
@@ -88,10 +85,11 @@ if st.button('Get Recommendations'):
                         genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin([item['title'] for item in st.session_state.cart])]
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
-                        # Calculate percentage based on the number of similar books in the cart
-                        genre_recommended_books['percentage'] = (genre_recommended_books['no'] / total_quantity) * 100
                         # Add to recommended_books DataFrame
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
+        
+        # Calculate percentage of each recommended book in the cart
+        recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100)
         
         # Sort recommended books by percentage
         recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
