@@ -86,6 +86,10 @@ if st.button('Get Recommendations'):
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
+        
+        # Sort recommended books by percentage
+        recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
+        
         with st.container(height=300):  # Set container height to display scrollbar
             for index, row in recommended_books.iterrows():
                 st.write(f"**Title:** {row['title']}")
