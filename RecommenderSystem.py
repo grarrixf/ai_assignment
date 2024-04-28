@@ -27,23 +27,18 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 
 # Initialize cart
 if 'cart' not in st.session_state:
-    st.session_state.cart = {}
+    st.session_state.cart = []
 
 # Display available books with scrollbar
 st.write("# Available Books")
 st.write('---')
 
 if not genre_filtered_books.empty:
-    for index, row in genre_filtered_books.iterrows():
-        add_to_cart = st.button(f'Add to Cart: {row["title"]}', key=f"button_{index}")
-        if add_to_cart:
-            title = row['title']
-            if title in st.session_state.cart:
-                # If the book is already in the cart, increase its quantity
-                st.session_state.cart[title]['quantity'] += 1
-            else:
-                # Otherwise, add the book to the cart with quantity 1
-                st.session_state.cart[title] = {'price': row['price'], 'quantity': 1}
+    with st.container(height=300):  # Set container height to display scrollbar
+        for index, row in genre_filtered_books.iterrows():
+            add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
+            if add_to_cart:
+                st.session_state.cart.append({'title': row['title'], 'quantity': 1})
 else:
     st.write("No books available in this genre.")
 
@@ -53,7 +48,7 @@ st.write('---')
 
 # Get recommendations based on selected books
 if st.button('Get Recommendations'):
-    selected_books_df = books[books['title'].isin(st.session_state.cart.keys())]
+    selected_books_df = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
     if not selected_books_df.empty:
         # Calculate the percentage of each genre in the cart
         genre_counts = selected_books_df['genre'].value_counts(normalize=True)
@@ -80,11 +75,10 @@ if st.button('Get Recommendations'):
                     if recommended_books_indices:
                         genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
                         # Exclude books already in the cart
-                        genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin(st.session_state.cart)]
+                        genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin([item['title'] for item in st.session_state.cart])]
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
-        st.write('## Recommended Books')
         with st.container(height=300):  # Set container height to display scrollbar
             for index, row in recommended_books.iterrows():
                 st.write(f"**Title:** {row['title']}")
@@ -101,23 +95,21 @@ total_price = 0
 if st.session_state.cart:
     st.write('## Items in Cart')
     with st.container(height=300):  # Set container height to display scrollbar
-        for title, book_info in st.session_state.cart.items():
+        for idx, item in enumerate(st.session_state.cart):
             col1, col2, col3 = st.columns([1, 3, 1])
             with col1:
                 if col1.button("+"):
-                    st.session_state.cart[title]['quantity'] += 1
+                    st.session_state.cart[idx]['quantity'] += 1
             with col2:
-                st.write(f"**Title:** {title}")
-                st.write(f"**Price:** ${book_info['price']:.2f}")
-                st.write(f"**Quantity:** {book_info['quantity']}")
+                st.write(f"**Title:** {item['title']}")
+                st.write(f"**Quantity:** {item['quantity']}")
             with col3:
                 if col3.button("-"):
-                    if st.session_state.cart[title]['quantity'] > 1:
-                        st.session_state.cart[title]['quantity'] -= 1
+                    if st.session_state.cart[idx]['quantity'] > 1:
+                        st.session_state.cart[idx]['quantity'] -= 1
                     else:
-                        # If quantity becomes zero, remove the item from the cart
-                        del st.session_state.cart[title]
-            total_price += book_info['price'] * book_info['quantity']
+                        del st.session_state.cart[idx]  # Remove the item if quantity becomes zero
+            total_price += item['quantity'] * books.loc[books['title'] == item['title'], 'price'].iloc[0]
 else:
     st.write("Your cart is empty.")
 
