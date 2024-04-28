@@ -98,13 +98,13 @@ if st.session_state.cart:
         for idx, item in enumerate(st.session_state.cart):
             col1, col2, col3 = st.columns([1, 3, 1])
             with col1:
-                if col1.button("add"):
+                if st.button(f"+##{idx}"):
                     st.session_state.cart[idx]['quantity'] += 1
             with col2:
                 st.write(f"**Title:** {item['title']}")
                 st.write(f"**Quantity:** {item['quantity']}")
             with col3:
-                if col3.button("deduct"):
+                if st.button(f"-##{idx}"):
                     if st.session_state.cart[idx]['quantity'] > 1:
                         st.session_state.cart[idx]['quantity'] -= 1
                     else:
