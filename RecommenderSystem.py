@@ -27,7 +27,7 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 
 # Initialize cart
 if 'cart' not in st.session_state:
-    st.session_state.cart = []
+    st.session_state.cart = {}
 
 # Display available books with scrollbar
 st.write("# Available Books")
@@ -36,9 +36,15 @@ st.write('---')
 if not genre_filtered_books.empty:
     with st.container(height=300):  # Set container height to display scrollbar
         for index, row in genre_filtered_books.iterrows():
-            add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
+            add_to_cart = st.button(f'Add to Cart: {row["title"]}', key=f"button_{index}")
             if add_to_cart:
-                st.session_state.cart.append(row['title'])
+                title = row['title']
+                if title in st.session_state.cart:
+                    # If the book is already in the cart, increase its quantity
+                    st.session_state.cart[title]['quantity'] += 1
+                else:
+                    # Otherwise, add the book to the cart with quantity 1
+                    st.session_state.cart[title] = {'price': row['price'], 'quantity': 1}
 else:
     st.write("No books available in this genre.")
 
@@ -48,7 +54,7 @@ st.write('---')
 
 # Get recommendations based on selected books
 if st.button('Get Recommendations'):
-    selected_books_df = books[books['title'].isin(st.session_state.cart)]
+    selected_books_df = books[books['title'].isin(st.session_state.cart.keys())]
     if not selected_books_df.empty:
         # Calculate the percentage of each genre in the cart
         genre_counts = selected_books_df['genre'].value_counts(normalize=True)
@@ -91,12 +97,28 @@ if st.button('Get Recommendations'):
 st.write("# Cart")
 st.write('---')
 
+total_price = 0
 if st.session_state.cart:
-    with st.container(height=300):  # Set container height to display scrollbar
-        for idx, item in enumerate(st.session_state.cart):
-            remove_button = st.button(f"Remove: {item}", key=f"remove_{idx}")
-            if remove_button:
-                st.session_state.cart.remove(item)  # Remove the item if the button is clicked
-                break  # Break after removing one item to avoid duplicate widget ID error
+    for title, book_info in st.session_state.cart.items():
+        st.write(f"**Title:** {title}")
+        st.write(f"**Price:** ${book_info['price']:.2f}")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if col1.button("+"):
+                st.session_state.cart[title]['quantity'] += 1
+        with col2:
+            st.write(f"**Quantity:** {book_info['quantity']}")
+        with col3:
+            if col3.button("-"):
+                if st.session_state.cart[title]['quantity'] > 1:
+                    st.session_state.cart[title]['quantity'] -= 1
+                else:
+                    # If quantity becomes zero, remove the item from the cart
+                    del st.session_state.cart[title]
+        st.write('---')
+        total_price += book_info['price'] * book_info['quantity']
 else:
     st.write("Your cart is empty.")
+
+# Display total price
+st.write(f"**Total Price:** ${total_price:.2f}")
