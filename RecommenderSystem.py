@@ -91,12 +91,28 @@ if st.button('Get Recommendations'):
 st.write("# Cart")
 st.write('---')
 
+total_price = 0
 if st.session_state.cart:
+    st.write('## Items in Cart')
     with st.container(height=300):  # Set container height to display scrollbar
         for idx, item in enumerate(st.session_state.cart):
-            remove_button = st.button(f"Remove: {item}", key=f"remove_{idx}")
-            if remove_button:
-                st.session_state.cart.remove(item)  # Remove the item if the button is clicked
-                break  # Break after removing one item to avoid duplicate widget ID error
+            col1, col2, col3 = st.columns([1, 10, 1])
+            with col1:
+                if st.button(f"# +", key=f"add_{idx}"):
+                    st.session_state.cart[idx]['quantity'] += 1
+            with col2:
+                st.write(f"**Title:** {item['title']}")
+                st.write(f"**Quantity:** {item['quantity']}")
+            with col3:
+                if st.button(f"# -", key=f"remove_{idx}"):
+                    if st.session_state.cart[idx]['quantity'] > 1:
+                        st.session_state.cart[idx]['quantity'] -= 1
+                    else:
+                        del st.session_state.cart[idx]  # Remove the item if quantity becomes zero
+            total_price += item['quantity'] * books.loc[books['title'] == item['title'], 'price'].iloc[0]
 else:
     st.write("Your cart is empty.")
+
+# Display total price
+st.write('---')
+st.write(f"**Total Price:** ${total_price:.2f}")
