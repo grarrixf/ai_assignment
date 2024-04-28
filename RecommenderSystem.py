@@ -91,18 +91,20 @@ if st.button('Get Recommendations'):
                         # Add to recommended_books DataFrame
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         
+        # Initialize recommended_books if it's empty
+        if recommended_books.empty:
+            recommended_books = pd.DataFrame(columns=books.columns)
+        
         # Calculate percentage of each recommended book in the cart
-        if not recommended_books.empty:
-            total_quantity = sum(item['quantity'] for item in st.session_state.cart)
-            recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100)
-            # Sort recommended books by percentage
-            recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
+        recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100)
+        
+        # Sort recommended books by percentage
+        recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
         
         with st.container(height=300):  # Set container height to display scrollbar
             for index, row in recommended_books.iterrows():
                 st.write(f"**Title:** {row['title']}")
                 st.write(f"**Genre:** {row['genre']}")
-                st.write(f"**Percentage in Cart:** {row['percentage']:.2f}%")
                 st.write('---')
     else:
         st.write("No books selected.")
