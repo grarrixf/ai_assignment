@@ -134,7 +134,7 @@ if st.session_state.cart:
             total_price += item['quantity'] * books.loc[books['title'] == item['title'], 'price'].iloc[0]
 
     # Checkout button
-    if st.button("Checkout"):
+    if st.button("Check Out"):
         st.session_state.cart = []  # Clear the cart upon checkout
 else:
     st.write("Your cart is empty.")
