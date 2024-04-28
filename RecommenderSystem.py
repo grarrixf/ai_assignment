@@ -34,17 +34,16 @@ st.write("# Available Books")
 st.write('---')
 
 if not genre_filtered_books.empty:
-    with st.container(height=300):  # Set container height to display scrollbar
-        for index, row in genre_filtered_books.iterrows():
-            add_to_cart = st.button(f'Add to Cart: {row["title"]}', key=f"button_{index}")
-            if add_to_cart:
-                title = row['title']
-                if title in st.session_state.cart:
-                    # If the book is already in the cart, increase its quantity
-                    st.session_state.cart[title]['quantity'] += 1
-                else:
-                    # Otherwise, add the book to the cart with quantity 1
-                    st.session_state.cart[title] = {'price': row['price'], 'quantity': 1}
+    for index, row in genre_filtered_books.iterrows():
+        add_to_cart = st.button(f'Add to Cart: {row["title"]}', key=f"button_{index}")
+        if add_to_cart:
+            title = row['title']
+            if title in st.session_state.cart:
+                # If the book is already in the cart, increase its quantity
+                st.session_state.cart[title]['quantity'] += 1
+            else:
+                # Otherwise, add the book to the cart with quantity 1
+                st.session_state.cart[title] = {'price': row['price'], 'quantity': 1}
 else:
     st.write("No books available in this genre.")
 
@@ -85,6 +84,7 @@ if st.button('Get Recommendations'):
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
+        st.write('## Recommended Books')
         with st.container(height=300):  # Set container height to display scrollbar
             for index, row in recommended_books.iterrows():
                 st.write(f"**Title:** {row['title']}")
@@ -99,26 +99,28 @@ st.write('---')
 
 total_price = 0
 if st.session_state.cart:
-    for title, book_info in st.session_state.cart.items():
-        st.write(f"**Title:** {title}")
-        st.write(f"**Price:** ${book_info['price']:.2f}")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if col1.button("+"):
-                st.session_state.cart[title]['quantity'] += 1
-        with col2:
-            st.write(f"**Quantity:** {book_info['quantity']}")
-        with col3:
-            if col3.button("-"):
-                if st.session_state.cart[title]['quantity'] > 1:
-                    st.session_state.cart[title]['quantity'] -= 1
-                else:
-                    # If quantity becomes zero, remove the item from the cart
-                    del st.session_state.cart[title]
-        st.write('---')
-        total_price += book_info['price'] * book_info['quantity']
+    st.write('## Items in Cart')
+    with st.container(height=300):  # Set container height to display scrollbar
+        for title, book_info in st.session_state.cart.items():
+            col1, col2, col3 = st.columns([1, 3, 1])
+            with col1:
+                if col1.button("+"):
+                    st.session_state.cart[title]['quantity'] += 1
+            with col2:
+                st.write(f"**Title:** {title}")
+                st.write(f"**Price:** ${book_info['price']:.2f}")
+                st.write(f"**Quantity:** {book_info['quantity']}")
+            with col3:
+                if col3.button("-"):
+                    if st.session_state.cart[title]['quantity'] > 1:
+                        st.session_state.cart[title]['quantity'] -= 1
+                    else:
+                        # If quantity becomes zero, remove the item from the cart
+                        del st.session_state.cart[title]
+            total_price += book_info['price'] * book_info['quantity']
 else:
     st.write("Your cart is empty.")
 
 # Display total price
+st.write('---')
 st.write(f"**Total Price:** ${total_price:.2f}")
