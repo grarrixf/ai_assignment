@@ -87,14 +87,15 @@ if st.button('Get Recommendations'):
     else:
         st.write("No books selected.")
 
-# Cart layout with scrollbar
+# Cart layout
 st.write("# Cart")
 st.write('---')
 
-if st.button('Show Cart'):
+if st.session_state.cart:
     with st.container(height=300):  # Set container height to display scrollbar
-        if st.session_state.cart:
-            for idx, item in enumerate(st.session_state.cart):
-                st.write(f"{idx + 1}. {item}")
-        else:
-            st.write("Your cart is empty.")
+        for idx, item in enumerate(st.session_state.cart):
+            col1, col2 = st.columns([1, 10])
+            col1.write(f"{idx + 1}.")
+            col2.write(item)
+            remove_button = col1.button("Remove")
+            if remove_button
