@@ -89,7 +89,7 @@ if st.button('Get Recommendations'):
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         # Add percentage column
-                        genre_recommended_books['percentage'] = genre_recommended_books['no'] / total_quantity  # Calculate percentage
+                        genre_recommended_books['percentage'] = genre_recommended_books.apply(lambda x: x['no'] / total_quantity, axis=1)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         
         # Sort recommended books by percentage
