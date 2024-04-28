@@ -86,11 +86,10 @@ if st.button('Get Recommendations'):
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         # Add percentage column
-                        genre_recommended_books['percentage'] = genre_recommended_books.apply(lambda x: 1 / len(genre_recommended_books) * st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x['title']), {'quantity': 0})]['quantity'], axis=1)
+                        genre_recommended_books['percentage'] = genre_recommended_books.apply(lambda x: 1 / len(genre_recommended_books) * next((item['quantity'] for item in st.session_state.cart if item['title'] == x['title']), 0), axis=1)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         
         # Sort recommended books by percentage
-        recommended_books = recommended_books.groupby(['title', 'genre']).sum().reset_index()
         recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
         
         with st.container(height=300):  # Set container height to display scrollbar
