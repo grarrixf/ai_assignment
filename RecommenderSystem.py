@@ -29,19 +29,6 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 if 'cart' not in st.session_state:
     st.session_state.cart = []
 
-# Display available books with scrollbar
-st.write("# Available Books")
-st.write('---')
-
-if not genre_filtered_books.empty:
-    with st.container(height=300):  # Set container height to display scrollbar
-        for index, row in genre_filtered_books.iterrows():
-            add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
-            if add_to_cart:
-                st.session_state.cart.append(row['title'])
-else:
-    st.write("No books available in this genre.")
-
 # Recommendation layout with scrollbar
 st.write("# Book Recommendations")
 st.write('---')
@@ -86,6 +73,19 @@ if st.button('Get Recommendations'):
                 st.write('---')
     else:
         st.write("No books selected.")
+
+# Display available books with scrollbar
+st.write("# Available Books")
+st.write('---')
+
+if not genre_filtered_books.empty:
+    with st.container(height=300):  # Set container height to display scrollbar
+        for index, row in genre_filtered_books.iterrows():
+            add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
+            if add_to_cart:
+                st.session_state.cart.append(row['title'])
+else:
+    st.write("No books available in this genre.")
 
 # Cart layout
 st.write("# Cart")
