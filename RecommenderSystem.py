@@ -38,7 +38,12 @@ if not genre_filtered_books.empty:
         for index, row in genre_filtered_books.iterrows():
             add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
             if add_to_cart:
-                st.session_state.cart.append({'title': row['title'], 'quantity': 1})
+                # Check if the book is already in the cart
+                book_index = next((i for i, item in enumerate(st.session_state.cart) if item['title'] == row['title']), None)
+                if book_index is not None:
+                    st.session_state.cart[book_index]['quantity'] += 1  # Increment quantity if already in cart
+                else:
+                    st.session_state.cart.append({'title': row['title'], 'quantity': 1})  # Add to cart with quantity 1
 else:
     st.write("No books available in this genre.")
 
