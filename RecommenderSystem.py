@@ -29,6 +29,9 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 if 'cart' not in st.session_state:
     st.session_state.cart = []
 
+# Initialize recommended books DataFrame
+recommended_books = pd.DataFrame(columns=books.columns)
+
 # Display available books with scrollbar
 st.write("# Available Books")
 st.write('---')
