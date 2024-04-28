@@ -86,7 +86,7 @@ if st.button('Get Recommendations'):
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         # Add percentage column
-                        genre_recommended_books['percentage'] = 1 / num_recommended_books
+                        genre_recommended_books['percentage'] = genre_recommended_books.apply(lambda x: 1 / len(genre_recommended_books) * st.session_state.cart[st.session_state.cart['title'] == x['title']]['quantity'].sum(), axis=1)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         
         # Sort recommended books by percentage
@@ -114,13 +114,6 @@ if st.session_state.cart:
             with col1:
                 if st.button(f"# +", key=f"add_{idx}"):
                     st.session_state.cart[idx]['quantity'] += 1
-                    # Increase percentage of book's genre
-                    book_genre = books.loc[books['title'] == item['title'], 'genre'].iloc[0]
-                    genre_filtered_books = books[books['genre'] == book_genre]
-                    num_genre_books = len(genre_filtered_books)
-                    for i, row in recommended_books.iterrows():
-                        if row['genre'] == book_genre:
-                            row['percentage'] += 1 / num_genre_books
             with col2:
                 st.write(f"**Title:** {item['title']}")
                 st.write(f"**Quantity:** {item['quantity']}")
