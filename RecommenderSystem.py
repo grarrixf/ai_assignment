@@ -25,6 +25,10 @@ selected_genre = st.sidebar.radio("Select Genre", books['genre'].unique())
 # Filter books based on selected genre
 genre_filtered_books = books[books['genre'] == selected_genre]
 
+# Initialize cart
+if 'cart' not in st.session_state:
+    st.session_state.cart = []
+
 # Display available books with scrollbar
 st.write("# Available Books")
 st.write('---')
@@ -83,11 +87,14 @@ if st.button('Get Recommendations'):
     else:
         st.write("No books selected.")
 
-# Cart
+# Cart layout with scrollbar
 st.write("# Cart")
 st.write('---')
-    if st.session_state.cart:
-        for idx, item in enumerate(st.session_state.cart):
-            st.write(f"{idx + 1}. {item}")
-    else:
-        st.write("Your cart is empty.")
+
+if st.button('Show Cart'):
+    with st.container(height=300):  # Set container height to display scrollbar
+        if st.session_state.cart:
+            for idx, item in enumerate(st.session_state.cart):
+                st.write(f"{idx + 1}. {item}")
+        else:
+            st.write("Your cart is empty.")
