@@ -96,7 +96,7 @@ if st.button('Get Recommendations'):
             recommended_books = pd.DataFrame(columns=books.columns)
         
         # Calculate percentage of each recommended book in the cart
-        recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100)
+        recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100 if next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None) is not None else 0)
         
         # Sort recommended books by percentage
         recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
