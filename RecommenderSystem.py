@@ -55,10 +55,11 @@ st.write('---')
 if st.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
     if not selected_books_df.empty:
-        # Calculate the percentage of each genre in the cart
-        genre_counts = selected_books_df['genre'].value_counts(normalize=True)
+        # Update genre counts based on cart
+        cart_genre_counts = selected_books_df['genre'].value_counts(normalize=True)
+        # Initialize recommended books DataFrame
         recommended_books = pd.DataFrame(columns=books.columns)
-        for genre, percentage in genre_counts.items():
+        for genre, percentage in cart_genre_counts.items():
             # Filter books from the selected genre
             genre_books = books[books['genre'] == genre]
             # Calculate the number of recommended books for this genre
@@ -105,6 +106,13 @@ if st.session_state.cart:
             with col1:
                 if st.button(f"# +", key=f"add_{idx}"):
                     st.session_state.cart[idx]['quantity'] += 1
+                    # Increase percentage of book's genre
+                    book_genre = books.loc[books['title'] == item['title'], 'genre'].iloc[0]
+                    genre_filtered_books = books[books['genre'] == book_genre]
+                    num_genre_books = len(genre_filtered_books)
+                    for i, row in recommended_books.iterrows():
+                        if row['genre'] == book_genre:
+                            row['percentage'] += 1 / num_genre_books
             with col2:
                 st.write(f"**Title:** {item['title']}")
                 st.write(f"**Quantity:** {item['quantity']}")
