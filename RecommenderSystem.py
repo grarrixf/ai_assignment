@@ -93,29 +93,28 @@ if st.button('Get Recommendations'):
     else:
         st.write("No books selected.")
 
-# Cart layout
+# Cart display
 st.write("# Cart")
 st.write('---')
 
 total_price = 0
 if st.session_state.cart:
-    with st.container(height=300):  # Set container height to display scrollbar
-        for title, book_info in st.session_state.cart.items():
-            st.write(f"**Title:** {title}")
-            st.write(f"**Price:** ${book_info['price']:.2f}")
+    for title, book_info in st.session_state.cart.items():
+        st.write(f"**Title:** {title}")
+        st.write(f"**Price:** ${book_info['price']:.2f}")
+        col1, col2 = st.columns(2)
+        with col1:
+            if col1.button("+"):
+                st.session_state.cart[title]['quantity'] += 1
+            if col1.button("-"):
+                if st.session_state.cart[title]['quantity'] > 1:
+                    st.session_state.cart[title]['quantity'] -= 1
+        with col2:
             st.write(f"**Quantity:** {book_info['quantity']}")
-            # Buttons to increase or decrease quantity
-            col1, col2, col3 = st.columns([1, 3, 1])
-            with col2:
-                if col2.button("+"):
-                    st.session_state.cart[title]['quantity'] += 1
-                if col2.button("-"):
-                    if st.session_state.cart[title]['quantity'] > 1:
-                        st.session_state.cart[title]['quantity'] -= 1
-            st.write('---')
-            total_price += book_info['price'] * book_info['quantity']
+        st.write('---')
+        total_price += book_info['price'] * book_info['quantity']
 else:
     st.write("Your cart is empty.")
 
 # Display total price
-st.write(f"Total Price: ${total_price:.2f}")
+st.write(f"**Total Price:** ${total_price:.2f}")
