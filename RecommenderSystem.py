@@ -29,6 +29,9 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 if 'cart' not in st.session_state:
     st.session_state.cart = []
 
+# Initialize recommended books DataFrame
+recommended_books = pd.DataFrame(columns=books.columns)
+
 # Display available books with scrollbar
 st.write("# Available Books")
 st.write('---')
@@ -38,7 +41,12 @@ if not genre_filtered_books.empty:
         for index, row in genre_filtered_books.iterrows():
             add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
             if add_to_cart:
-                st.session_state.cart.append(row['title'])
+                # Check if the book is already in the cart
+                book_index = next((i for i, item in enumerate(st.session_state.cart) if item['title'] == row['title']), None)
+                if book_index is not None:
+                    st.session_state.cart[book_index]['quantity'] += 1  # Increment quantity if already in cart
+                else:
+                    st.session_state.cart.append({'title': row['title'], 'quantity': 1})  # Add to cart with quantity 1
 else:
     st.write("No books available in this genre.")
 
@@ -48,16 +56,18 @@ st.write('---')
 
 # Get recommendations based on selected books
 if st.button('Get Recommendations'):
-    selected_books_df = books[books['title'].isin(st.session_state.cart)]
+    selected_books_df = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
     if not selected_books_df.empty:
-        # Calculate the percentage of each genre in the cart
-        genre_counts = selected_books_df['genre'].value_counts(normalize=True)
-        recommended_books = pd.DataFrame(columns=books.columns)
-        for genre, percentage in genre_counts.items():
+        # Calculate total quantity of books in cart
+        total_quantity = sum(item['quantity'] for item in st.session_state.cart)
+        
+        # Update genre counts based on cart
+        cart_genre_counts = selected_books_df['genre'].value_counts(normalize=True)
+        for genre, percentage in cart_genre_counts.items():
             # Filter books from the selected genre
             genre_books = books[books['genre'] == genre]
             # Calculate the number of recommended books for this genre
-            num_recommended_books = max(int(len(selected_books_df) * percentage), 1)
+            num_recommended_books = max(int(total_quantity * percentage), 1)
             # Perform KMeans clustering on the genre books
             if num_recommended_books > 0:
                 kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
@@ -75,10 +85,16 @@ if st.button('Get Recommendations'):
                     if recommended_books_indices:
                         genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
                         # Exclude books already in the cart
-                        genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin(st.session_state.cart)]
+                        genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin([item['title'] for item in st.session_state.cart])]
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
+                        # Add percentage column
+                        genre_recommended_books['percentage'] = genre_recommended_books.apply(lambda x: x['no'] / total_quantity, axis=1)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
+        
+        # Sort recommended books by percentage
+        recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
+        
         with st.container(height=300):  # Set container height to display scrollbar
             for index, row in recommended_books.iterrows():
                 st.write(f"**Title:** {row['title']}")
