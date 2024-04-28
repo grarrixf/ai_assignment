@@ -58,13 +58,16 @@ st.write('---')
 if st.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
     if not selected_books_df.empty:
+        # Calculate total quantity of books in cart
+        total_quantity = sum(item['quantity'] for item in st.session_state.cart)
+        
         # Update genre counts based on cart
         cart_genre_counts = selected_books_df['genre'].value_counts(normalize=True)
         for genre, percentage in cart_genre_counts.items():
             # Filter books from the selected genre
             genre_books = books[books['genre'] == genre]
             # Calculate the number of recommended books for this genre
-            num_recommended_books = max(int(len(selected_books_df) * percentage), 1)
+            num_recommended_books = max(int(total_quantity * percentage), 1)
             # Perform KMeans clustering on the genre books
             if num_recommended_books > 0:
                 kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
@@ -86,7 +89,7 @@ if st.button('Get Recommendations'):
                         # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
                         # Add percentage column
-                        genre_recommended_books['percentage'] = genre_recommended_books.apply(lambda x: 1 / len(genre_recommended_books) * next((item['quantity'] for item in st.session_state.cart if item['title'] == x['title']), 0), axis=1)
+                        genre_recommended_books['percentage'] = genre_recommended_books.apply(lambda x: x['quantity'] / total_quantity, axis=1)
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         
         # Sort recommended books by percentage
