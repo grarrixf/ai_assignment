@@ -93,9 +93,10 @@ st.write('---')
 
 if st.session_state.cart:
     with st.container(height=300):  # Set container height to display scrollbar
-        for item in st.session_state.cart:
-            st.write(f"Remove: {item}")  # Display the item
-            if st.button("Remove"):  # Button to remove the item
+        for idx, item in enumerate(st.session_state.cart):
+            remove_button = st.button(f"Remove: {item}", key=f"remove_{idx}")
+            if remove_button:
                 st.session_state.cart.remove(item)  # Remove the item if the button is clicked
+                break  # Break after removing one item to avoid duplicate widget ID error
 else:
     st.write("Your cart is empty.")
