@@ -39,12 +39,13 @@ if not genre_filtered_books.empty:
             add_to_cart = st.button(f'Add to Cart: {row["title"]}', key=f"button_{index}")
             if add_to_cart:
                 print(f"Adding {row['title']} to cart...")
-                if row['title'] in st.session_state.cart:
-                    print(f"Item {row['title']} already in cart")
-                    st.session_state.cart[row['title']]['quantity'] += 1
+                title = row['title']
+                if title in st.session_state.cart:
+                    print(f"Item {title} already in cart")
+                    st.session_state.cart[title]['quantity'] += 1
                 else:
-                    print(f"Adding new item {row['title']} to cart")
-                    st.session_state.cart[row['title']] = {'price': row['price'], 'quantity': 1}
+                    print(f"Adding new item {title} to cart")
+                    st.session_state.cart[title] = {'price': row['price'], 'quantity': 1}
 else:
     st.write("No books available in this genre.")
 
@@ -102,15 +103,16 @@ if st.session_state.cart:
     for title, book_info in st.session_state.cart.items():
         st.write(f"**Title:** {title}")
         st.write(f"**Price:** ${book_info['price']:.2f}")
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             if col1.button("+"):
                 st.session_state.cart[title]['quantity'] += 1
-            if col1.button("-"):
-                if st.session_state.cart[title]['quantity'] > 1:
-                    st.session_state.cart[title]['quantity'] -= 1
         with col2:
             st.write(f"**Quantity:** {book_info['quantity']}")
+        with col3:
+            if col3.button("-"):
+                if st.session_state.cart[title]['quantity'] > 1:
+                    st.session_state.cart[title]['quantity'] -= 1
         st.write('---')
         total_price += book_info['price'] * book_info['quantity']
 else:
