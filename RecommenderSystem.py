@@ -25,7 +25,7 @@ selected_genre = st.sidebar.radio("Select Genre", books['genre'].unique())
 # Filter books based on selected genre
 genre_filtered_books = books[books['genre'] == selected_genre]
 
-# Initialize cart as a dictionary to store book title and quantity
+# Initialize cart as a dictionary to store book title, price, and quantity
 if 'cart' not in st.session_state:
     st.session_state.cart = {}
 
