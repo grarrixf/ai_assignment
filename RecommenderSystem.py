@@ -98,4 +98,5 @@ if st.session_state.cart:
             col1.write(f"{idx + 1}.")
             col2.write(item)
             remove_button = col1.button("Remove")
-            if remove_button
+            if remove_button:
+                st.session_state.cart.remove(item)
