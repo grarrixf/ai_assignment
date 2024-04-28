@@ -150,4 +150,4 @@ if st.session_state.cart:
 
 # Display total price
 st.write('---')
-st.write(f"**Total Price:** ${total_price:.2f}")
+st.write(f"**Total Price:** RM {total_price:.2f}")
