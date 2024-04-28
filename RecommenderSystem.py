@@ -101,7 +101,7 @@ if st.session_state.cart:
     st.write('## Items in Cart')
     with st.container(height=300):  # Set container height to display scrollbar
         for idx, item in enumerate(st.session_state.cart):
-            col1, col2, col3 = st.columns([1, 3, 1])
+            col1, col2, col3 = st.columns([1, 4, 1])
             with col1:
                 if st.button(f"# +"):
                     st.session_state.cart[idx]['quantity'] += 1
