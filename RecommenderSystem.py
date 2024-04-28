@@ -144,12 +144,9 @@ else:
     st.write("Your cart is empty.")
 
 # Checkout button
-st.write('---')
 if st.session_state.cart:
     if st.button("Checkout"):
         st.session_state.cart = []  # Clear the cart upon checkout
-else:
-    st.write("Your cart is empty.")
 
 # Display total price
 st.write('---')
