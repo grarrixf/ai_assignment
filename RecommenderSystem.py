@@ -89,10 +89,11 @@ if st.button('Get Recommendations'):
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         
         # Calculate percentage of each recommended book in the cart
-        recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100)
-        
-        # Sort recommended books by percentage
-        recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
+        if not recommended_books.empty:
+            total_quantity = sum(item['quantity'] for item in st.session_state.cart)
+            recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100)
+            # Sort recommended books by percentage
+            recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
         
         with st.container(height=300):  # Set container height to display scrollbar
             for index, row in recommended_books.iterrows():
