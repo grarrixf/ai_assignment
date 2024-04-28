@@ -98,7 +98,7 @@ if st.button('Get Recommendations'):
         # Calculate percentage of each recommended book in the cart
         recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100 if next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None) is not None else 0)
         
-        # Sort recommended books by percentage in descending order
+        # Sort recommended books by percentage
         recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
         
         with st.container(height=300):  # Set container height to display scrollbar
@@ -144,9 +144,12 @@ else:
     st.write("Your cart is empty.")
 
 # Checkout button
+st.write('---')
 if st.session_state.cart:
     if st.button("Checkout"):
         st.session_state.cart = []  # Clear the cart upon checkout
+else:
+    st.write("Your cart is empty.")
 
 # Display total price
 st.write('---')
