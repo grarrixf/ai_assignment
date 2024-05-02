@@ -163,6 +163,12 @@ st.write("## Classification Report and Accuracy Score")
 X = books[['price', 'rate']]
 y = books['genre']
 
+# Adding items from the cart to the dataset
+for item in st.session_state.cart:
+    book = books[books['title'] == item['title']]
+    X = pd.concat([X, book[['price', 'rate']]])
+    y = pd.concat([y, pd.Series([item['genre']] * item['quantity'])])
+
 # Splitting the dataset
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
