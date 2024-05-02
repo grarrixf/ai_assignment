@@ -193,4 +193,4 @@ if st.session_state.cart:
 
 # display total price
 st.write('---')
-st.write(f"**Total Price:** USD {total_price:.2f}")
+st.write(f"**Total Price:** USD {tPrice:.2f}")
