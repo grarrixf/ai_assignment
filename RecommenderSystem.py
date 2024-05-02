@@ -129,10 +129,6 @@ if st.session_state.cart:
                     total_quantity = sum(item['quantity'] for item in st.session_state.cart)
                     recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100 if next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None) is not None else 0)
                     recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
-                    # Update X and y
-                    book = books[books['title'] == item['title']]
-                    X = pd.concat([X, book[['price', 'rate']]])
-                    y = pd.concat([y, pd.Series([item['genre']] * item['quantity'])])
             with col2:
                 st.write(f"**Title:** {item['title']}")
                 st.write(f"**Quantity:** {item['quantity']}")
@@ -144,15 +140,8 @@ if st.session_state.cart:
                         total_quantity = sum(item['quantity'] for item in st.session_state.cart)
                         recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100 if next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None) is not None else 0)
                         recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
-                        # Update X and y
-                        book = books[books['title'] == item['title']]
-                        X = pd.concat([X, book[['price', 'rate']]])
-                        y = pd.concat([y, pd.Series([item['genre']] * item['quantity'])])
                     else:
                         del st.session_state.cart[idx]  # Remove the item if quantity becomes zero
-                        # Remove corresponding entries from X and y
-                        X = X[~((X['price'] == book['price'].iloc[0]) & (X['rate'] == book['rate'].iloc[0]))]
-                        y = y[~((y == item['genre']) & (y.index == X.index))]
             total_price += item['quantity'] * books.loc[books['title'] == item['title'], 'price'].iloc[0]
 else:
     st.write("Your cart is empty.")
