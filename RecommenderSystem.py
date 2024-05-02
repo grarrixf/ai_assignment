@@ -178,21 +178,24 @@ st.write("Shape of X:", X.shape)
 st.write("Shape of y:", y.shape)
 
 # Splitting the dataset
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+if not X.empty and not y.empty:
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train a Random Forest Classifier
-clf = RandomForestClassifier(random_state=42)
-clf.fit(X_train, y_train)
+    # Train a Random Forest Classifier
+    clf = RandomForestClassifier(random_state=42)
+    clf.fit(X_train, y_train)
 
-# Predictions
-y_pred = clf.predict(X_test)
+    # Predictions
+    y_pred = clf.predict(X_test)
 
-# Classification report
-classification_rep = classification_report(y_test, y_pred)
-st.write("### Classification Report")
-st.write(classification_rep)
+    # Classification report
+    classification_rep = classification_report(y_test, y_pred)
+    st.write("### Classification Report")
+    st.write(classification_rep)
 
-# Accuracy score
-accuracy = accuracy_score(y_test, y_pred)
-st.write("### Accuracy Score")
-st.write(f"Accuracy: {accuracy:.2f}")
+    # Accuracy score
+    accuracy = accuracy_score(y_test, y_pred)
+    st.write("### Accuracy Score")
+    st.write(f"Accuracy: {accuracy:.2f}")
+else:
+    st.write("Cannot perform classification. Please add items to your cart.") 
