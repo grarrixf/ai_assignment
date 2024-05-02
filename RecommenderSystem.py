@@ -73,7 +73,7 @@ if st.button('Get Recommendations'):
             
             # perform KMeans on the genre book
             if numRecommendedBook > 0:
-                kmeans = KMeans(n_clusters =min(10, len(genreBooks)), randomState=42)
+                kmeans = KMeans(n_clusters =min(10, len(genreBooks)), random_state=42)
                 kmeans.fit(genreBooks[['price', 'rate']])
                 
                 # predict clusters for all books
