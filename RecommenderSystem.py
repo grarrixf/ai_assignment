@@ -173,6 +173,10 @@ for item in st.session_state.cart:
 valid_genres = books['genre'].unique()
 y = y[y.isin(valid_genres)]  # Keep only the genres that exist in the dataset
 
+# Check the shapes of X and y
+st.write("Shape of X:", X.shape)
+st.write("Shape of y:", y.shape)
+
 # Splitting the dataset
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
