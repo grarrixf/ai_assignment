@@ -158,8 +158,8 @@ y = books['genre']
 # Adding items from the cart to the dataset
 for item in st.session_state.cart:
     book = books[books['title'] == item['title']]
-    X = pd.concat([X, book[['price', 'rate']]])
-    y = pd.concat([y, pd.Series([item['genre']] * item['quantity'])])
+    X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
+    y = pd.concat([y, pd.Series([item['genre']])])
 
 # Check if y contains only valid genres
 valid_genres = books['genre'].unique()
@@ -190,4 +190,4 @@ if not X.empty and not y.empty and X.shape[0] == y.shape[0]:  # Ensure X and y h
     st.write("### Accuracy Score")
     st.write(f"Accuracy: {accuracy:.2f}")
 else:
-    st.write("Cannot perform classification. Please add items to your cart.") 
+    st.write("Cannot perform classification. Please add items to your cart.")
