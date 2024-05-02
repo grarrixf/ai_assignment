@@ -52,7 +52,7 @@ else:
 # recommendation section
 st.write("# Book Recommendations")
 st.write('---')
-F
+
 # get recommendations based on selected books
 if st.button('Get Recommendations'):
     selectedBook = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
