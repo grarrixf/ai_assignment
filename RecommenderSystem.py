@@ -191,6 +191,25 @@ if st.session_state.cart:
     if st.button("Checkout"):
         st.session_state.cart = []  # clear the cart if checkout
 
+# Splitting the dataset
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train a Random Forest Classifier
+clf = RandomForestClassifier(random_state=42)
+clf.fit(X_train, y_train)
+
+# Predictions
+y_pred = clf.predict(X_test)
+
+# Classification report
+classification_rep = classification_report(y_test, y_pred)
+st.write("### Classification Report")
+st.write(classification_rep)
+
+# Accuracy score
+accuracy = accuracy_score(y_test, y_pred)
+st.write("### Accuracy Score")
+st.write(f"Accuracy: {accuracy:.2f}")
 # display total price
 st.write('---')
 st.write(f"**Total Price:** USD {tPrice:.2f}")
