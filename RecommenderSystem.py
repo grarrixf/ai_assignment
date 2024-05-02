@@ -125,10 +125,6 @@ if st.session_state.cart:
             with col1:
                 if st.button(f"# +", key=f"add_{idx}"):
                     st.session_state.cart[idx]['quantity'] += 1
-                    # Recalculate percentage when quantity is increased
-                    total_quantity = sum(item['quantity'] for item in st.session_state.cart)
-                    recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100 if next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None) is not None else 0)
-                    recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
             with col2:
                 st.write(f"**Title:** {item['title']}")
                 st.write(f"**Quantity:** {item['quantity']}")
@@ -136,10 +132,6 @@ if st.session_state.cart:
                 if st.button(f"# -", key=f"remove_{idx}"):
                     if st.session_state.cart[idx]['quantity'] > 1:
                         st.session_state.cart[idx]['quantity'] -= 1
-                        # Recalculate percentage when quantity is decreased
-                        total_quantity = sum(item['quantity'] for item in st.session_state.cart)
-                        recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100 if next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None) is not None else 0)
-                        recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
                     else:
                         del st.session_state.cart[idx]  # Remove the item if quantity becomes zero
             total_price += item['quantity'] * books.loc[books['title'] == item['title'], 'price'].iloc[0]
@@ -178,7 +170,7 @@ st.write("Shape of X:", X.shape)
 st.write("Shape of y:", y.shape)
 
 # Splitting the dataset
-if not X.empty and not y.empty:
+if not X.empty and not y.empty and X.shape[0] == y.shape[0]:  # Ensure X and y have the same number of samples
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Train a Random Forest Classifier
