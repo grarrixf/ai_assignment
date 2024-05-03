@@ -1,26 +1,26 @@
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import reportort, accuracy_score
 from sklearn.model_selection import cross_val_predict
 from sklearn.cluster import KMeans
 import pandas as pd
 import streamlit as st
 
-# Load the dataset
+# load the dataset
 books = pd.read_csv('AmanzonBooks.csv')
 
-# Drop rows with missing values in the genre column
+# drop rows with missing values in the genre column
 books.dropna(subset=['genre'], inplace=True)
 
-# Keep only relevant columns and rename
+# keep only relevant columns and rename
 books = books[['rank', 'bookTitle', 'bookPrice', 'rating', 'genre']]
 books.rename(columns={'rank': 'no', 'bookTitle': 'title', 'bookPrice': 'price', 'rating': 'rate'}, inplace=True)
 
-# Convert price and rating to numeric
+# convert price and rating to numeric
 books['price'] = pd.to_numeric(books['price'], errors='coerce')
 books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
 
 # classifier and metric
-def update_classifier_and_metrics():
+def cam():
     global x, y, clf
     x = books[['price', 'rate']]
     y = books['genre']
@@ -33,66 +33,64 @@ def update_classifier_and_metrics():
             y = pd.concat([y, pd.Series([item['genre']])])
 
     # filter out invalid genre
-    valid_genres = books['genre'].unique()
-    y = y[y.isin(valid_genres)]
+    validGenres = books['genre'].unique()
+    y = y[y.isin(validGenres)]
 
     # no enough data to train model
     if not x.empty and not y.empty and x.shape[0] == y.shape[0]:
         # use class weights to handle imbalanced classes
         clf = RandomForestClassifier(random_state=42, class_weight='balanced')
         # predict classes using cross-validation
-        y_pred = cross_val_predict(clf, x, y, cv=5, fit_params={'sample_weight': calculate_sample_weights(y)})
+        yPred = cross_val_predict(clf, x, y, cv=5, fit_params={'sample_weight': cWeights(y)})
         
-        classification_rep = classification_report(y, y_pred)
+        report = reportort(y, yPred)
         st.write("### Classification Report")
-        st.write(classification_rep)
+        st.write(report)
 
-        accuracy = accuracy_score(y, y_pred)
+        accuracy = accuracy_score(y, yPred)
         st.write("### Accuracy Score")
         st.write(f"Accuracy: {accuracy:.2f}")
 
-# Function to calculate sample weights based on class weights
-def calculate_sample_weights(y):
-    class_counts = y.value_counts()
-    class_weights = {genre: len(y) / (class_counts[genre] * len(class_counts)) for genre in class_counts.index}
-    return y.map(class_weights)
+# function to calculate sample weights based on class weights
+def cWeights(y):
+    cCounts = y.value_counts()
+    cWeights = {genre: len(y) / (cCounts[genre] * len(cCounts)) for genre in cCounts.index}
+    return y.map(cWeights)
 
-# Function to get recommended books
-def get_recommended_books(selected_books_df, genre_books, num_recommended_books):
-    kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
-    kmeans_model.fit(genre_books[['price', 'rate']])
-    all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
-    selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
-    recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
-    if recommended_books_indices:
-        recommended_books_indices = recommended_books_indices[:min(len(recommended_books_indices), num_recommended_books)]
-        recommended_books_indices = [idx for idx in recommended_books_indices if idx < len(genre_books)]
-        if recommended_books_indices:
-            genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
-            genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin([item['title'] for item in st.session_state.cart])]
-            return genre_recommended_books.head(num_recommended_books)
+# function to get recommended books
+def getRbook(selectedBook, genreBook, numRbook):
+    kmeans = KMeans(n_clusters=min(10, len(genreBook)), random_state=42)
+    kmeans.fit(genreBook[['price', 'rate']])
+    booksClusters = kmeans.predict(books[['price', 'rate']])
+    sBooksClusters = kmeans.predict(selectedBook[['price', 'rate']])
+    position = [idx for idx, cluster in enumerate(booksClusters) if cluster in sBooksClusters]
+    if position:
+        position = position[:min(len(position), numRbook)]
+        position = [idx for idx in position if idx < len(genreBook)]
+        if position:
+            genreRbook = genreBook.iloc[position].drop_duplicates(subset='title', keep='first')
+            genreRbook = genreRbook[~genreRbook['title'].isin([item['title'] for item in st.session_state.cart])]
+            return genreRbook.head(numRbook)
     return pd.DataFrame(columns=books.columns)
 
-# Sidebar to select books
+# select books
 st.sidebar.header('Books Recommender System')
+selectedGenre = st.sidebar.radio("Select Genre", books['genre'].unique())
 
-# Display genres as buttons
-selected_genre = st.sidebar.radio("Select Genre", books['genre'].unique())
+# filter books based on selected genre
+genreFbook = books[books['genre'] == selectedGenre]
 
-# Filter books based on selected genre
-genre_filtered_books = books[books['genre'] == selected_genre]
-
-# Initialize cart
+# cart
 if 'cart' not in st.session_state:
     st.session_state.cart = []
 
-# Display available books with scrollbar
+# display available books
 st.write("# Available Books")
 st.write('---')
 
-if not genre_filtered_books.empty:
-    with st.container(height=300):  # Set container height to display scrollbar
-        for index, row in genre_filtered_books.iterrows():
+if not genreFbook.empty:
+    with st.container(height=300): 
+        for index, row in genreFbook.iterrows():
             add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
             if add_to_cart:
                 book_index = next((i for i, item in enumerate(st.session_state.cart) if item['title'] == row['title']), None)
@@ -103,50 +101,50 @@ if not genre_filtered_books.empty:
 else:
     st.write("No books available in this genre.")
 
-# Recommendation layout with scrollbar
+# recommendation layout
 st.write("# Book Recommendations")
 st.write('---')
 
-# Get recommendations based on selected books
+# get recommendations based on selected books
 if st.button('Get Recommendations'):
-    selected_books_df = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
-    if not selected_books_df.empty:
-        total_quantity = sum(item['quantity'] for item in st.session_state.cart)
-        recommended_books = pd.DataFrame() 
-        cart_genre_counts = selected_books_df['genre'].value_counts(normalize=True)
-        for genre, percentage in cart_genre_counts.items():
-            genre_books = books[books['genre'] == genre]
-            num_recommended_books = max(int(total_quantity * percentage), 1)
-            if num_recommended_books > 0:
-                genre_recommended_books = get_recommended_books(selected_books_df, genre_books, num_recommended_books)
-                if not genre_recommended_books.empty:
-                    recommended_books = pd.concat([recommended_books, genre_recommended_books], ignore_index=True)
+    selectedBook = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
+    if not selectedBook.empty:
+        tQuantity = sum(item['quantity'] for item in st.session_state.cart)
+        rBook = pd.DataFrame() 
+        cartGenreC = selectedBook['genre'].value_counts(normalize=True)
+        for genre, percentage in cartGenreC.items():
+            genreBook = books[books['genre'] == genre]
+            numRbook = max(int(tQuantity * percentage), 1)
+            if numRbook > 0:
+                genreRbook = getRbook(selectedBook, genreBook, numRbook)
+                if not genreRbook.empty:
+                    rBook = pd.concat([rBook, genreRbook], ignore_index=True)
         
-        if recommended_books.empty:
+        if rBook.empty:
             st.write("No recommendations.")
         
-        with st.container(height=300):  # Set container height to display scrollbar
-            for index, row in recommended_books.iterrows():
+        with st.container(height=300):
+            for index, row in rBook.iterrows():
                 st.write(f"**Title:** {row['title']}")
                 st.write(f"**Genre:** {row['genre']}")
                 st.write('---')
     else:
         st.write("No books selected.")
 
-# Cart layout
+# cart layout
 st.write("# Cart")
 st.write('---')
 
-total_price = 0
+tPrice = 0
 if st.session_state.cart:
     st.write('## Items in Cart')
-    with st.container(height=300):  # Set container height to display scrollbar
+    with st.container(height=300): 
         for idx, item in enumerate(st.session_state.cart):
             col1, col2, col3 = st.columns([1, 10, 1])
             with col1:
                 if st.button(f"# +", key=f"add_{idx}"):
                     st.session_state.cart[idx]['quantity'] += 1
-                    update_classifier_and_metrics()  # Update classifier when quantity is increased
+                    cam()
             with col2:
                 st.write(f"**Title:** {item['title']}")
                 st.write(f"**Quantity:** {item['quantity']}")
@@ -154,21 +152,19 @@ if st.session_state.cart:
                 if st.button(f"# -", key=f"remove_{idx}"):
                     if st.session_state.cart[idx]['quantity'] > 1:
                         st.session_state.cart[idx]['quantity'] -= 1
-                        update_classifier_and_metrics()  # Update classifier when quantity is decreased
                     else:
-                        del st.session_state.cart[idx]  # Remove the item if quantity becomes zero
-                        update_classifier_and_metrics()  # Update classifier when item is removed
-            total_price += item['quantity'] * books.loc[books['title'] == item['title'], 'price'].iloc[0]
+                        del st.session_state.cart[idx]
+            tPrice += item['quantity'] * books.loc[books['title'] == item['title'], 'price'].iloc[0]
 else:
     st.write("Your cart is empty.")
 
-# Checkout button
+# checkout button
 if st.session_state.cart:
     if st.button("Checkout"):
-        st.session_state.cart = []  # Clear the cart upon checkout
+        st.session_state.cart = []  # clear cart
 
-# Display total price
+# display total price
 st.write('---')
-st.write(f"**Total Price:** USD {total_price:.2f}")
+st.write(f"**Total Price:** USD {tPrice:.2f}")
 
-update_classifier_and_metrics()
+cam()
