@@ -1,46 +1,8 @@
-import streamlit as st
-import pandas as pd
-from sklearn.cluster import KMeans
-from sklearn.model_selection import train_test_split, cross_val_predict
-from sklearn.metrics import classification_report, accuracy_score
 from sklearn.ensemble import RandomForestClassifier
-from imblearn.over_sampling import RandomOverSampler
-
-# Function to update the classifier and metrics
-def update_classifier_and_metrics():
-    global X, y, clf
-    
-    X = books[['price', 'rate']]
-    y = books['genre']
-    
-    for item in st.session_state.cart:
-        book = books[books['title'] == item['title']]
-        for _ in range(item['quantity']):  # Consider the quantity of each book in the cart
-            X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
-            y = pd.concat([y, pd.Series([item['genre']])])
-    
-    valid_genres = books['genre'].unique()
-    y = y[y.isin(valid_genres)]
-    
-    if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
-        # Oversampling to balance the classes
-        oversampler = RandomOverSampler(random_state=42)
-        X_resampled, y_resampled = oversampler.fit_resample(X, y)
-        
-        X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
-        
-        clf = RandomForestClassifier(n_estimators=100, random_state=42)
-        clf.fit(X_train, y_train)
-        
-        y_pred = clf.predict(X_test)
-        
-        classification_rep = classification_report(y_test, y_pred)
-        st.write("### Updated Classification Report")
-        st.write(classification_rep)
-        
-        accuracy = accuracy_score(y_test, y_pred)
-        st.write("### Updated Accuracy Score")
-        st.write(f"Accuracy: {accuracy:.2f}")
+from sklearn.metrics import classification_report, accuracy_score
+from sklearn.model_selection import cross_val_predict
+import pandas as pd
+import streamlit as st
 
 # Load the dataset
 books = pd.read_csv('AmanzonBooks.csv')
@@ -56,6 +18,40 @@ books.rename(columns={'rank': 'no', 'bookTitle': 'title', 'bookPrice': 'price', 
 books['price'] = pd.to_numeric(books['price'], errors='coerce')
 books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
 
+# Function to update the classifier and metrics
+def update_classifier_and_metrics():
+    global X, y, clf
+    X = books[['price', 'rate']]
+    y = books['genre']
+
+    for item in st.session_state.cart:
+        book = books[books['title'] == item['title']]
+        for _ in range(item['quantity']):  # Consider the quantity of each book in the cart
+            X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
+            y = pd.concat([y, pd.Series([item['genre']])])
+
+    valid_genres = books['genre'].unique()
+    y = y[y.isin(valid_genres)]
+
+    if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
+        # Use class weights to handle imbalanced classes
+        clf = RandomForestClassifier(random_state=42, class_weight='balanced')
+        y_pred = cross_val_predict(clf, X, y, cv=5, fit_params={'sample_weight': calculate_sample_weights(y)})
+        
+        classification_rep = classification_report(y, y_pred)
+        st.write("### Classification Report")
+        st.write(classification_rep)
+
+        accuracy = accuracy_score(y, y_pred)
+        st.write("### Accuracy Score")
+        st.write(f"Accuracy: {accuracy:.2f}")
+
+# Function to calculate sample weights based on class weights
+def calculate_sample_weights(y):
+    class_counts = y.value_counts()
+    class_weights = {genre: len(y) / (class_counts[genre] * len(class_counts)) for genre in class_counts.index}
+    return y.map(class_weights)
+
 # Sidebar to select books
 st.sidebar.header('Books Recommender System')
 
@@ -68,9 +64,6 @@ genre_filtered_books = books[books['genre'] == selected_genre]
 # Initialize cart
 if 'cart' not in st.session_state:
     st.session_state.cart = []
-
-# Initialize recommended books DataFrame
-recommended_books = pd.DataFrame(columns=books.columns)
 
 # Display available books with scrollbar
 st.write("# Available Books")
@@ -104,26 +97,12 @@ if st.button('Get Recommendations'):
             genre_books = books[books['genre'] == genre]
             num_recommended_books = max(int(total_quantity * percentage), 1)
             if num_recommended_books > 0:
-                kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
-                kmeans_model.fit(genre_books[['price', 'rate']])
-                all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
-                selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
-                recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
-                if recommended_books_indices:
-                    recommended_books_indices = recommended_books_indices[:min(len(recommended_books_indices), num_recommended_books)]
-                    recommended_books_indices = [idx for idx in recommended_books_indices if idx < len(genre_books)]
-                    if recommended_books_indices:
-                        genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
-                        genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin([item['title'] for item in st.session_state.cart])]
-                        genre_recommended_books = genre_recommended_books.head(num_recommended_books)
-                        recommended_books = pd.concat([recommended_books, genre_recommended_books])
+                recommended_books = get_recommended_books(selected_books_df, genre_books, num_recommended_books)
+                st.write(f"## {genre} Recommendations")
+                st.write(recommended_books)
         
         if recommended_books.empty:
-            recommended_books = pd.DataFrame(columns=books.columns)
-        
-        recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100 if next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None) is not None else 0)
-        
-        recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
+            st.write("No recommendations.")
         
         with st.container(height=300):  # Set container height to display scrollbar
             for index, row in recommended_books.iterrows():
@@ -171,36 +150,20 @@ if st.session_state.cart:
 st.write('---')
 st.write(f"**Total Price:** USD {total_price:.2f}")
 
-# Function to update the classifier and metrics with correct quantities
-def update_classifier_and_metrics():
-    global X, y, clf
-    X = books[['price', 'rate']]
-    y = books['genre']
-
-    for item in st.session_state.cart:
-        book = books[books['title'] == item['title']]
-        for _ in range(item['quantity']):  # Consider the quantity of each book in the cart
-            X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
-            y = pd.concat([y, pd.Series([item['genre']])])
-
-    valid_genres = books['genre'].unique()
-    y = y[y.isin(valid_genres)]
-
-    if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
-        # Use class weights to handle imbalanced classes
-        class_weights = {genre: len(y) / (len(books[books['genre'] == genre]) * len(valid_genres)) for genre in valid_genres}
-        sample_weights = y.map(class_weights)
-        
-        # Train the classifier with cross-validation
-        clf = RandomForestClassifier(random_state=42, class_weight=class_weights)
-        y_pred = cross_val_predict(clf, X, y, cv=5)
-        
-        classification_rep = classification_report(y, y_pred)
-        st.write("### Classification Report")
-        st.write(classification_rep)
-
-        accuracy = accuracy_score(y, y_pred)
-        st.write("### Accuracy Score")
-        st.write(f"Accuracy: {accuracy:.2f}")
+# Function to get recommended books
+def get_recommended_books(selected_books_df, genre_books, num_recommended_books):
+    kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
+    kmeans_model.fit(genre_books[['price', 'rate']])
+    all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
+    selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
+    recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
+    if recommended_books_indices:
+        recommended_books_indices = recommended_books_indices[:min(len(recommended_books_indices), num_recommended_books)]
+        recommended_books_indices = [idx for idx in recommended_books_indices if idx < len(genre_books)]
+        if recommended_books_indices:
+            genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
+            genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin([item['title'] for item in st.session_state.cart])]
+            return genre_recommended_books.head(num_recommended_books)
+    return pd.DataFrame(columns=books.columns)
 
 update_classifier_and_metrics()  # Initially update classifier and metrics
