@@ -44,7 +44,7 @@ def cam():
         yPred = cross_val_predict(clf, x, y, cv=5, fit_params={'sample_weight': cWeights(y)})
         
         report = classification_report(y, yPred, output_dict=True)  # Output classification report as dictionary
-        st.write("### Classification Report")
+        st.write("# Classification Report")
 
         # Display classification report in table format
         report_df = pd.DataFrame(report).transpose()
