@@ -1,6 +1,7 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import cross_val_predic
+from sklearn.cluster import KMeans
 import pandas as pd
 import streamlit as st
 
@@ -18,25 +19,26 @@ books.rename(columns={'rank': 'no', 'bookTitle': 'title', 'bookPrice': 'price', 
 books['price'] = pd.to_numeric(books['price'], errors='coerce')
 books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
 
-# Function to update the classifier and metrics
+# classifier and metric
 def update_classifier_and_metrics():
-    global X, y, clf
-    X = books[['price', 'rate']]
+    global x, y, clf
+    x = books[['price', 'rate']]
     y = books['genre']
 
+    # Update x and y following the item in the cart
     for item in st.session_state.cart:
         book = books[books['title'] == item['title']]
-        for _ in range(item['quantity']):  # Consider the quantity of each book in the cart
-            X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
+        for _ in range(item['quantity']): 
+            x = pd.concat([x, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
             y = pd.concat([y, pd.Series([item['genre']])])
 
     valid_genres = books['genre'].unique()
     y = y[y.isin(valid_genres)]
 
-    if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
+    if not x.empty and not y.empty and x.shape[0] == y.shape[0]:
         # Use class weights to handle imbalanced classes
         clf = RandomForestClassifier(random_state=42, class_weight='balanced')
-        y_pred = cross_val_predict(clf, X, y, cv=5, fit_params={'sample_weight': calculate_sample_weights(y)})
+        y_pred = cross_val_predict(clf, x, y, cv=5, fit_params={'sample_weight': calculate_sample_weights(y)})
         
         classification_rep = classification_report(y, y_pred)
         st.write("### Classification Report")
