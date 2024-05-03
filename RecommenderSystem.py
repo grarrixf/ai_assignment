@@ -5,6 +5,36 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 
+# Function to update the classifier and metrics
+def update_classifier_and_metrics():
+    global X, y, clf
+    X = books[['price', 'rate']]
+    y = books['genre']
+
+    for item in st.session_state.cart:
+        book = books[books['title'] == item['title']]
+        X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
+        y = pd.concat([y, pd.Series([item['genre']])])
+
+    valid_genres = books['genre'].unique()
+    y = y[y.isin(valid_genres)]
+
+    if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        clf = RandomForestClassifier(random_state=42)
+        clf.fit(X_train, y_train)
+
+        y_pred = clf.predict(X_test)
+
+        classification_rep = classification_report(y_test, y_pred)
+        st.write("### Updated Classification Report")
+        st.write(classification_rep)
+
+        accuracy = accuracy_score(y_test, y_pred)
+        st.write("### Updated Accuracy Score")
+        st.write(f"Accuracy: {accuracy:.2f}")
+
 # Load the dataset
 books = pd.read_csv('AmanzonBooks.csv')
 
@@ -44,12 +74,11 @@ if not genre_filtered_books.empty:
         for index, row in genre_filtered_books.iterrows():
             add_to_cart = st.checkbox(f'Add to Cart: {row["title"]}', key=f"checkbox_{index}")
             if add_to_cart:
-                # Check if the book is already in the cart
                 book_index = next((i for i, item in enumerate(st.session_state.cart) if item['title'] == row['title']), None)
                 if book_index is not None:
-                    st.session_state.cart[book_index]['quantity'] += 1  # Increment quantity if already in cart
+                    st.session_state.cart[book_index]['quantity'] += 1
                 else:
-                    st.session_state.cart.append({'title': row['title'], 'quantity': 1, 'genre': row['genre']})  # Add to cart with quantity 1 and genre
+                    st.session_state.cart.append({'title': row['title'], 'quantity': 1, 'genre': row['genre']})
 else:
     st.write("No books available in this genre.")
 
@@ -61,47 +90,32 @@ st.write('---')
 if st.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
     if not selected_books_df.empty:
-        # Calculate total quantity of books in cart
         total_quantity = sum(item['quantity'] for item in st.session_state.cart)
         
-        # Update genre counts based on cart
         cart_genre_counts = selected_books_df['genre'].value_counts(normalize=True)
         for genre, percentage in cart_genre_counts.items():
-            # Filter books from the selected genre
             genre_books = books[books['genre'] == genre]
-            # Calculate the number of recommended books for this genre
             num_recommended_books = max(int(total_quantity * percentage), 1)
-            # Perform KMeans clustering on the genre books
             if num_recommended_books > 0:
                 kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
                 kmeans_model.fit(genre_books[['price', 'rate']])
-                # Predict clusters for all books
                 all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
-                # Get cluster for selected books
                 selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
-                # Filter books from the same cluster as selected books
                 recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
-                # Ensure recommended_books_indices is not empty and within the bounds of the DataFrame's index
                 if recommended_books_indices:
                     recommended_books_indices = recommended_books_indices[:min(len(recommended_books_indices), num_recommended_books)]
                     recommended_books_indices = [idx for idx in recommended_books_indices if idx < len(genre_books)]
                     if recommended_books_indices:
                         genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
-                        # Exclude books already in the cart
                         genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin([item['title'] for item in st.session_state.cart])]
-                        # Limit the number of recommended books for this genre
                         genre_recommended_books = genre_recommended_books.head(num_recommended_books)
-                        # Add to recommended_books DataFrame
                         recommended_books = pd.concat([recommended_books, genre_recommended_books])
         
-        # Initialize recommended_books if it's empty
         if recommended_books.empty:
             recommended_books = pd.DataFrame(columns=books.columns)
         
-        # Calculate percentage of each recommended book in the cart
         recommended_books['percentage'] = recommended_books['title'].apply(lambda x: st.session_state.cart[next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None)]['quantity'] / total_quantity * 100 if next((i for i, item in enumerate(st.session_state.cart) if item['title'] == x), None) is not None else 0)
         
-        # Sort recommended books by percentage
         recommended_books = recommended_books.sort_values(by='percentage', ascending=False)
         
         with st.container(height=300):  # Set container height to display scrollbar
@@ -125,6 +139,7 @@ if st.session_state.cart:
             with col1:
                 if st.button(f"# +", key=f"add_{idx}"):
                     st.session_state.cart[idx]['quantity'] += 1
+                    update_classifier_and_metrics()  # Update classifier when quantity is increased
             with col2:
                 st.write(f"**Title:** {item['title']}")
                 st.write(f"**Quantity:** {item['quantity']}")
@@ -132,8 +147,10 @@ if st.session_state.cart:
                 if st.button(f"# -", key=f"remove_{idx}"):
                     if st.session_state.cart[idx]['quantity'] > 1:
                         st.session_state.cart[idx]['quantity'] -= 1
+                        update_classifier_and_metrics()  # Update classifier when quantity is decreased
                     else:
                         del st.session_state.cart[idx]  # Remove the item if quantity becomes zero
+                        update_classifier_and_metrics()  # Update classifier when item is removed
             total_price += item['quantity'] * books.loc[books['title'] == item['title'], 'price'].iloc[0]
 else:
     st.write("Your cart is empty.")
@@ -151,43 +168,8 @@ st.write(f"**Total Price:** USD {total_price:.2f}")
 st.write('---')
 st.write("## Classification Report and Accuracy Score")
 
-# Features and target variable
 X = books[['price', 'rate']]
 y = books['genre']
+clf = RandomForestClassifier(random_state=42)  # Initialize classifier
 
-# Adding items from the cart to the dataset
-for item in st.session_state.cart:
-    book = books[books['title'] == item['title']]
-    X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
-    y = pd.concat([y, pd.Series([item['genre']])])
-
-# Check if y contains only valid genres
-valid_genres = books['genre'].unique()
-y = y[y.isin(valid_genres)]  # Keep only the genres that exist in the dataset
-
-# Check the shapes of X and y
-st.write("Shape of X:", X.shape)
-st.write("Shape of y:", y.shape)
-
-# Splitting the dataset
-if not X.empty and not y.empty and X.shape[0] == y.shape[0]:  # Ensure X and y have the same number of samples
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    # Train a Random Forest Classifier
-    clf = RandomForestClassifier(random_state=42)
-    clf.fit(X_train, y_train)
-
-    # Predictions
-    y_pred = clf.predict(X_test)
-
-    # Classification report
-    classification_rep = classification_report(y_test, y_pred)
-    st.write("### Classification Report")
-    st.write(classification_rep)
-
-    # Accuracy score
-    accuracy = accuracy_score(y_test, y_pred)
-    st.write("### Accuracy Score")
-    st.write(f"Accuracy: {accuracy:.2f}")
-else:
-    st.write("Cannot perform classification. Please add items to your cart.")
+update_classifier_and_metrics()  # Initially update classifier and metrics
