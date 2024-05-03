@@ -43,9 +43,19 @@ def cam():
         # predict classes using cross-validation
         yPred = cross_val_predict(clf, x, y, cv=5, fit_params={'sample_weight': cWeights(y)})
         
-        report = classification_report(y, yPred)
+        report = classification_report(y, yPred, output_dict=True)  # Output classification report as dictionary
         st.write("### Classification Report")
-        st.write(report)
+
+        # Display classification report in table format
+        st.write('<style> .report { display: block; overflow-x: auto; white-space: nowrap; } </style>', unsafe_allow_html=True)
+        st.write('<div class="report">', unsafe_allow_html=True)
+        st.write('<table>')
+        st.write('<tr><th>Genre</th><th>Precision</th><th>Recall</th><th>F1-score</th><th>Support</th></tr>')
+        for genre, metrics in report.items():
+            if genre != 'accuracy' and genre != 'macro avg' and genre != 'weighted avg':
+                st.write(f"<tr><td>{genre}</td><td>{metrics['precision']}</td><td>{metrics['recall']}</td><td>{metrics['f1-score']}</td><td>{metrics['support']}</td></tr>")
+        st.write('</table>')
+        st.write('</div>')
 
 # function to calculate sample weights based on class weights
 def cWeights(y):
