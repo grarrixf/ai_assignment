@@ -1,6 +1,6 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.model_selection import cross_val_predic
+from sklearn.model_selection import cross_val_predict
 from sklearn.cluster import KMeans
 import pandas as pd
 import streamlit as st
