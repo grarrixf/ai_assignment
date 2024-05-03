@@ -192,8 +192,3 @@ def update_classifier_and_metrics():
         st.write(classification_rep)
 
 update_classifier_and_metrics()  # Initially update classifier and metrics
-
-
-        accuracy = accuracy_score(y_test, y_pred)
-        st.write("### Updated Accuracy Score")
-        st.write(f"Accuracy: {accuracy:.2f}")
