@@ -143,7 +143,6 @@ if st.session_state.cart:
             with col1:
                 if st.button(f"# +", key=f"add_{idx}"):
                     st.session_state.cart[idx]['quantity'] += 1
-                    cam()
             with col2:
                 st.write(f"**Title:** {item['title']}")
                 st.write(f"**Quantity:** {item['quantity']}")
