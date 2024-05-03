@@ -22,7 +22,11 @@ def update_classifier_and_metrics():
     y = y[y.isin(valid_genres)]
     
     if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # Oversampling to balance the classes
+        oversampler = RandomOverSampler(random_state=42)
+        X_resampled, y_resampled = oversampler.fit_resample(X, y)
+        
+        X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
         
         clf = RandomForestClassifier(n_estimators=100, random_state=42)
         clf.fit(X_train, y_train)
