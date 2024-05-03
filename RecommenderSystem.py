@@ -21,15 +21,15 @@ books['rate'] = pd.to_numeric(books['rate'], errors='coerce')
 
 # classifier and metric
 def update_classifier_and_metrics():
-    global X, y, clf
-    X = books[['price', 'rate']]
+    global x, y, clf
+    x = books[['price', 'rate']]
     y = books['genre']
 
     # update x and y following the item in the cart
     for item in st.session_state.cart:
         book = books[books['title'] == item['title']]
         for _ in range(item['quantity']): 
-            X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
+            x = pd.concat([x, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
             y = pd.concat([y, pd.Series([item['genre']])])
 
     # filter out invalid genre
@@ -41,7 +41,7 @@ def update_classifier_and_metrics():
         # use class weights to handle imbalanced classes
         clf = RandomForestClassifier(random_state=42, class_weight='balanced')
         # predict classes using cross-validation
-        y_pred = cross_val_predict(clf, X, y, cv=5, fit_params={'sample_weight': calculate_sample_weights(y)})
+        y_pred = cross_val_predict(clf, x, y, cv=5, fit_params={'sample_weight': calculate_sample_weights(y)})
         
         classification_rep = classification_report(y, y_pred)
         st.write("### Classification Report")
