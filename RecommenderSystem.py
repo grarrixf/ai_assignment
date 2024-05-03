@@ -112,7 +112,7 @@ if st.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
     if not selected_books_df.empty:
         total_quantity = sum(item['quantity'] for item in st.session_state.cart)
-        recommended_books = pd.DataFrame()  # Define the variable outside the loop
+        recommended_books = pd.DataFrame() 
         cart_genre_counts = selected_books_df['genre'].value_counts(normalize=True)
         for genre, percentage in cart_genre_counts.items():
             genre_books = books[books['genre'] == genre]
@@ -121,8 +121,6 @@ if st.button('Get Recommendations'):
                 genre_recommended_books = get_recommended_books(selected_books_df, genre_books, num_recommended_books)
                 if not genre_recommended_books.empty:
                     recommended_books = pd.concat([recommended_books, genre_recommended_books], ignore_index=True)
-                    st.write(f"## {genre} Recommendations")
-                    st.write(genre_recommended_books)
         
         if recommended_books.empty:
             st.write("No recommendations.")
