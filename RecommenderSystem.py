@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sklearn.cluster import KMeans
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_predict  # Import cross_val_predict
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 
@@ -13,25 +13,27 @@ def update_classifier_and_metrics():
 
     for item in st.session_state.cart:
         book = books[books['title'] == item['title']]
-        X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
-        y = pd.concat([y, pd.Series([item['genre']])])
+        for _ in range(item['quantity']):  # Consider the quantity of each book in the cart
+            X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
+            y = pd.concat([y, pd.Series([item['genre']])])
 
     valid_genres = books['genre'].unique()
     y = y[y.isin(valid_genres)]
 
     if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-        clf = RandomForestClassifier(random_state=42)
-        clf.fit(X_train, y_train)
-
-        y_pred = clf.predict(X_test)
-
-        classification_rep = classification_report(y_test, y_pred)
+        # Use class weights to handle imbalanced classes
+        class_weights = {genre: len(y) / (len(books[books['genre'] == genre]) * len(valid_genres)) for genre in valid_genres}
+        sample_weights = y.map(class_weights)
+        
+        # Train the classifier with cross-validation
+        clf = RandomForestClassifier(random_state=42, class_weight=class_weights)
+        y_pred = cross_val_predict(clf, X, y, cv=5)
+        
+        classification_rep = classification_report(y, y_pred)
         st.write("### Updated Classification Report")
         st.write(classification_rep)
 
-        accuracy = accuracy_score(y_test, y_pred)
+        accuracy = accuracy_score(y, y_pred)
         st.write("### Updated Accuracy Score")
         st.write(f"Accuracy: {accuracy:.2f}")
 
@@ -164,7 +166,7 @@ if st.session_state.cart:
 st.write('---')
 st.write(f"**Total Price:** USD {total_price:.2f}")
 
-# classifier with class weights and use cross-validation
+# Function to update the classifier and metrics with correct quantities
 def update_classifier_and_metrics():
     global X, y, clf
     X = books[['price', 'rate']]
@@ -197,4 +199,3 @@ def update_classifier_and_metrics():
         st.write(f"Accuracy: {accuracy:.2f}")
 
 update_classifier_and_metrics()  # Initially update classifier and metrics
-
