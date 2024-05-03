@@ -191,11 +191,11 @@ def update_classifier_and_metrics():
         y_pred = cross_val_predict(clf, X, y, cv=5)
         
         classification_rep = classification_report(y, y_pred)
-        st.write("### Updated Classification Report")
+        st.write("### Classification Report")
         st.write(classification_rep)
 
         accuracy = accuracy_score(y, y_pred)
-        st.write("### Updated Accuracy Score")
+        st.write("### Accuracy Score")
         st.write(f"Accuracy: {accuracy:.2f}")
 
 update_classifier_and_metrics()  # Initially update classifier and metrics
