@@ -57,6 +57,22 @@ def calculate_sample_weights(y):
     class_weights = {genre: len(y) / (class_counts[genre] * len(class_counts)) for genre in class_counts.index}
     return y.map(class_weights)
 
+# Function to get recommended books
+def get_recommended_books(selected_books_df, genre_books, num_recommended_books):
+    kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
+    kmeans_model.fit(genre_books[['price', 'rate']])
+    all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
+    selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
+    recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
+    if recommended_books_indices:
+        recommended_books_indices = recommended_books_indices[:min(len(recommended_books_indices), num_recommended_books)]
+        recommended_books_indices = [idx for idx in recommended_books_indices if idx < len(genre_books)]
+        if recommended_books_indices:
+            genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
+            genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin([item['title'] for item in st.session_state.cart])]
+            return genre_recommended_books.head(num_recommended_books)
+    return pd.DataFrame(columns=books.columns)
+
 # Sidebar to select books
 st.sidebar.header('Books Recommender System')
 
@@ -96,15 +112,17 @@ if st.button('Get Recommendations'):
     selected_books_df = books[books['title'].isin([item['title'] for item in st.session_state.cart])]
     if not selected_books_df.empty:
         total_quantity = sum(item['quantity'] for item in st.session_state.cart)
-        
+        recommended_books = pd.DataFrame()  # Define the variable outside the loop
         cart_genre_counts = selected_books_df['genre'].value_counts(normalize=True)
         for genre, percentage in cart_genre_counts.items():
             genre_books = books[books['genre'] == genre]
             num_recommended_books = max(int(total_quantity * percentage), 1)
             if num_recommended_books > 0:
-                recommended_books = get_recommended_books(selected_books_df, genre_books, num_recommended_books)
-                st.write(f"## {genre} Recommendations")
-                st.write(recommended_books)
+                genre_recommended_books = get_recommended_books(selected_books_df, genre_books, num_recommended_books)
+                if not genre_recommended_books.empty:
+                    recommended_books = pd.concat([recommended_books, genre_recommended_books], ignore_index=True)
+                    st.write(f"## {genre} Recommendations")
+                    st.write(genre_recommended_books)
         
         if recommended_books.empty:
             st.write("No recommendations.")
@@ -154,21 +172,5 @@ if st.session_state.cart:
 # Display total price
 st.write('---')
 st.write(f"**Total Price:** USD {total_price:.2f}")
-
-# Function to get recommended books
-def get_recommended_books(selected_books_df, genre_books, num_recommended_books):
-    kmeans_model = KMeans(n_clusters=min(10, len(genre_books)), random_state=42)
-    kmeans_model.fit(genre_books[['price', 'rate']])
-    all_books_clusters = kmeans_model.predict(books[['price', 'rate']])
-    selected_books_clusters = kmeans_model.predict(selected_books_df[['price', 'rate']])
-    recommended_books_indices = [idx for idx, cluster in enumerate(all_books_clusters) if cluster in selected_books_clusters]
-    if recommended_books_indices:
-        recommended_books_indices = recommended_books_indices[:min(len(recommended_books_indices), num_recommended_books)]
-        recommended_books_indices = [idx for idx in recommended_books_indices if idx < len(genre_books)]
-        if recommended_books_indices:
-            genre_recommended_books = genre_books.iloc[recommended_books_indices].drop_duplicates(subset='title', keep='first')
-            genre_recommended_books = genre_recommended_books[~genre_recommended_books['title'].isin([item['title'] for item in st.session_state.cart])]
-            return genre_recommended_books.head(num_recommended_books)
-    return pd.DataFrame(columns=books.columns)
 
 update_classifier_and_metrics()
