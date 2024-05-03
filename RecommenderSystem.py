@@ -43,9 +43,12 @@ def cam():
         # predict classes using cross-validation
         yPred = cross_val_predict(clf, x, y, cv=5, fit_params={'sample_weight': cWeights(y)})
         
-        report = classification_report(y, yPred)
+        report = classification_report(y, yPred, output_dict=True)  # Output classification report as dictionary
         st.write("### Classification Report")
-        st.write(report)
+
+        # Display classification report in table format
+        report_df = pd.DataFrame(report).transpose()
+        st.write(report_df)
 
 # function to calculate sample weights based on class weights
 def cWeights(y):
