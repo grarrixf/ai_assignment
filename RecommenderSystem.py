@@ -43,7 +43,7 @@ def cam():
         # predict classes using cross-validation
         yPred = cross_val_predict(clf, x, y, cv=5, fit_params={'sample_weight': cWeights(y)})
         
-        report = reportort(y, yPred)
+        report = classification_report(y, yPred)
         st.write("### Classification Report")
         st.write(report)
 
