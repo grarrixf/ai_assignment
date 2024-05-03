@@ -164,7 +164,7 @@ if st.session_state.cart:
 st.write('---')
 st.write(f"**Total Price:** USD {total_price:.2f}")
 
-# Function to update the classifier and metrics with correct quantities
+# classifier with class weights and use cross-validation
 def update_classifier_and_metrics():
     global X, y, clf
     X = books[['price', 'rate']]
@@ -180,15 +180,21 @@ def update_classifier_and_metrics():
     y = y[y.isin(valid_genres)]
 
     if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-        clf = RandomForestClassifier(random_state=42)
-        clf.fit(X_train, y_train)
-
-        y_pred = clf.predict(X_test)
-
-        classification_rep = classification_report(y_test, y_pred)
+        # Use class weights to handle imbalanced classes
+        class_weights = {genre: len(y) / (len(books[books['genre'] == genre]) * len(valid_genres)) for genre in valid_genres}
+        sample_weights = y.map(class_weights)
+        
+        # Train the classifier with cross-validation
+        clf = RandomForestClassifier(random_state=42, class_weight=class_weights)
+        y_pred = cross_val_predict(clf, X, y, cv=5)
+        
+        classification_rep = classification_report(y, y_pred)
         st.write("### Updated Classification Report")
         st.write(classification_rep)
 
+        accuracy = accuracy_score(y, y_pred)
+        st.write("### Updated Accuracy Score")
+        st.write(f"Accuracy: {accuracy:.2f}")
+
 update_classifier_and_metrics()  # Initially update classifier and metrics
+
