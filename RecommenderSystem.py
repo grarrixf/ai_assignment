@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 from sklearn.cluster import KMeans
-from sklearn.model_selection import train_test_split, cross_val_predict  # Import cross_val_predict
+from sklearn.model_selection import train_test_split, cross_val_predict
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.ensemble import RandomForestClassifier
+from imblearn.over_sampling import RandomOverSampler
 
 # Function to update the classifier and metrics
 def update_classifier_and_metrics():
@@ -40,7 +41,6 @@ def update_classifier_and_metrics():
         accuracy = accuracy_score(y_test, y_pred)
         st.write("### Updated Accuracy Score")
         st.write(f"Accuracy: {accuracy:.2f}")
-
 
 # Load the dataset
 books = pd.read_csv('AmanzonBooks.csv')
