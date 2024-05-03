@@ -37,7 +37,7 @@ def update_classifier_and_metrics():
     y = y[y.isin(valid_genres)]
 
     # no enough data to train model
-    if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
+    if not x.empty and not y.empty and x.shape[0] == y.shape[0]:
         # use class weights to handle imbalanced classes
         clf = RandomForestClassifier(random_state=42, class_weight='balanced')
         # predict classes using cross-validation
