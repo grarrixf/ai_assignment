@@ -47,10 +47,6 @@ def cam():
         st.write("### Classification Report")
         st.write(report)
 
-        accuracy = accuracy_score(y, yPred)
-        st.write("### Accuracy Score")
-        st.write(f"Accuracy: {accuracy:.2f}")
-
 # function to calculate sample weights based on class weights
 def cWeights(y):
     cCounts = y.value_counts()
