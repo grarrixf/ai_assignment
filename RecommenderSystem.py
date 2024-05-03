@@ -8,34 +8,35 @@ from sklearn.ensemble import RandomForestClassifier
 # Function to update the classifier and metrics
 def update_classifier_and_metrics():
     global X, y, clf
+    
     X = books[['price', 'rate']]
     y = books['genre']
-
+    
     for item in st.session_state.cart:
         book = books[books['title'] == item['title']]
         for _ in range(item['quantity']):  # Consider the quantity of each book in the cart
             X = pd.concat([X, pd.DataFrame({'price': [book['price'].values[0]], 'rate': [book['rate'].values[0]]})])
             y = pd.concat([y, pd.Series([item['genre']])])
-
+    
     valid_genres = books['genre'].unique()
     y = y[y.isin(valid_genres)]
-
+    
     if not X.empty and not y.empty and X.shape[0] == y.shape[0]:
-        # Use class weights to handle imbalanced classes
-        class_weights = {genre: len(y) / (len(books[books['genre'] == genre]) * len(valid_genres)) for genre in valid_genres}
-        sample_weights = y.map(class_weights)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         
-        # Train the classifier with cross-validation
-        clf = RandomForestClassifier(n_estimators=100, criterion='gini', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, bootstrap=True, oob_score=False, n_jobs=None, random_state=42, verbose=0, warm_start=False, class_weight='balanced_subsample')
-        y_pred = cross_val_predict(clf, X, y, cv=5)
+        clf = RandomForestClassifier(n_estimators=100, random_state=42)
+        clf.fit(X_train, y_train)
         
-        classification_rep = classification_report(y, y_pred)
-        st.write("### Classification Report")
+        y_pred = clf.predict(X_test)
+        
+        classification_rep = classification_report(y_test, y_pred)
+        st.write("### Updated Classification Report")
         st.write(classification_rep)
-
-        accuracy = accuracy_score(y, y_pred)
-        st.write("### Accuracy Score")
+        
+        accuracy = accuracy_score(y_test, y_pred)
+        st.write("### Updated Accuracy Score")
         st.write(f"Accuracy: {accuracy:.2f}")
+
 
 # Load the dataset
 books = pd.read_csv('AmanzonBooks.csv')
