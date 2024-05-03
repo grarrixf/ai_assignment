@@ -26,15 +26,15 @@ def update_classifier_and_metrics():
         sample_weights = y.map(class_weights)
         
         # Train the classifier with cross-validation
-        clf = RandomForestClassifier(random_state=42, class_weight=class_weights)
+        clf = RandomForestClassifier(n_estimators=100, criterion='gini', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, bootstrap=True, oob_score=False, n_jobs=None, random_state=42, verbose=0, warm_start=False, class_weight='balanced_subsample')
         y_pred = cross_val_predict(clf, X, y, cv=5)
         
         classification_rep = classification_report(y, y_pred)
-        st.write("### Updated Classification Report")
+        st.write("### Classification Report")
         st.write(classification_rep)
 
         accuracy = accuracy_score(y, y_pred)
-        st.write("### Updated Accuracy Score")
+        st.write("### Accuracy Score")
         st.write(f"Accuracy: {accuracy:.2f}")
 
 # Load the dataset
