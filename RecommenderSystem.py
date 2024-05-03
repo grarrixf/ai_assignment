@@ -191,6 +191,17 @@ def update_classifier_and_metrics():
         st.write("### Updated Classification Report")
         st.write(classification_rep)
 
+# Classification report and accuracy score
+st.write('---')
+st.write("## Classification Report and Accuracy Score")
+
+X = books[['price', 'rate']]
+y = books['genre']
+clf = RandomForestClassifier(random_state=42)  # Initialize classifier
+
+update_classifier_and_metrics()  # Initially update classifier and metrics
+
+
         accuracy = accuracy_score(y_test, y_pred)
         st.write("### Updated Accuracy Score")
         st.write(f"Accuracy: {accuracy:.2f}")
