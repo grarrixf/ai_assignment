@@ -1,7 +1,7 @@
 # Recommender System (Books) RSWS3G7
 
 ## Instruction:
-1. launch streamlit (https://aiassignment-g9oj4t9vaqecnmwrfuj7sz.streamlit.app/)
+1. launch streamlit (https://aiassignment-g9oj4t9vaqecnmwrfuj7sz.streamlit.app/) **if cannot open in normal browser, change to incognito**
 2. side bar select type of genre
 3. double to add or remove a certain book from cart
 4. press get recommendation button to generate recommendation
